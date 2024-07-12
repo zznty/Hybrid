@@ -1,0 +1,14 @@
+﻿using System.ComponentModel;
+
+namespace Hybrid.Com.Dispatch;
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+[Flags]
+public enum IDLFLAG : short
+{
+    IDLFLAG_NONE = PARAMFLAG.PARAMFLAG_NONE,
+    IDLFLAG_FIN = PARAMFLAG.PARAMFLAG_FIN,
+    IDLFLAG_FOUT = PARAMFLAG.PARAMFLAG_FOUT,
+    IDLFLAG_FLCID = PARAMFLAG.PARAMFLAG_FLCID,
+    IDLFLAG_FRETVAL = PARAMFLAG.PARAMFLAG_FRETVAL
+}
