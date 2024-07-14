@@ -312,7 +312,7 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
             "uint" => "VT_UI4",
             "ulong" => "VT_UI8",
             "char" => "VT_UI2",
-            _ => throw new NotSupportedException()
+            _ => throw new NotSupportedException($"{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} is not supported for variant marshalling")
         };
     }
 
@@ -352,7 +352,7 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
             var invoke = type.GetMembers("Invoke").OfType<IMethodSymbol>().Single();
 
             if (!invoke.ReturnsVoid)
-                return "<UNSUPPORTED>";
+                throw new NotSupportedException($"delegate {type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} should not return a value");
             
             return $$"""
                    ({{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}})(({{string.Join(", ", invoke.Parameters.Select(b => $"__{b.Name}"))}}) => {
