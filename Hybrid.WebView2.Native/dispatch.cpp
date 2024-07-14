@@ -46,7 +46,7 @@ extern "C" {
             dcArgPointer(vm, instance);
             for (int i = params->cArgs - 1; i >= 0; --i)
             {
-                if (params->rgvarg[i].vt != details[i + 1].type)
+                if (params->rgvarg[i].vt != details[params->cArgs - i].type)
                     return DISP_E_BADVARTYPE;
                 
                 switch (params->rgvarg[i].vt)

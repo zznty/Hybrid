@@ -42,7 +42,7 @@ public partial class HybridTypeLib : ITypeLib
             
             _indexIidMap.Add(entry.IID);
             _typeMap.Add(entry.IID,
-                (new TypeInfo(entry.IID, _indexIidMap.Count, i == 0 ? null : _typeMap[entries[i - 1].IID].Info), TYPEKIND.TKIND_INTERFACE, typeof(TInterface).TypeHandle));
+                (new TypeInfo(entry.IID, _indexIidMap.Count), TYPEKIND.TKIND_INTERFACE, typeof(TInterface).TypeHandle));
         }
     }
     

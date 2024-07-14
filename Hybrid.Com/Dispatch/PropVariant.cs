@@ -104,7 +104,7 @@ public struct PropVariant
     /// </summary>
     /// <param name="obj">The System.Object to compare with the current PropVariant.</param>
     /// <returns>true if the specified System.Object is equal to the current PropVariant; otherwise, false.</returns>
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is PropVariant variant && Equals(variant);
     }

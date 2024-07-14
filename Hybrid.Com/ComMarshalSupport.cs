@@ -101,13 +101,13 @@ public static partial class ComMarshalSupport
         variant.WriteVariant(value);
     }
 
-    public static void InvokeAsCallback(this IDispatch callback)
+    public static void InvokeAsValue(this IDispatch callback)
     {
         DISPPARAMS dispParams = default;
-        DispatchCallback(callback, ref dispParams);
+        DispatchAsValue(callback, ref dispParams);
     }
     
-    public static unsafe void InvokeAsCallback<T0>(this IDispatch callback, T0 arg0)
+    public static unsafe void InvokeAsValue<T0>(this IDispatch callback, T0 arg0)
     {
         var variantArgs = stackalloc PropVariant[1];
         
@@ -120,10 +120,10 @@ public static partial class ComMarshalSupport
             cArgs = 1,
             rgvarg = variantArgs
         };
-        DispatchCallback(callback, ref dispParams);
+        DispatchAsValue(callback, ref dispParams);
     }
     
-    public static unsafe void InvokeAsCallback<T0, T1>(this IDispatch callback, T0 arg0, T1 arg1)
+    public static unsafe void InvokeAsValue<T0, T1>(this IDispatch callback, T0 arg0, T1 arg1)
     {
         var variantArgs = stackalloc PropVariant[2];
         
@@ -139,10 +139,10 @@ public static partial class ComMarshalSupport
             cArgs = 2,
             rgvarg = variantArgs
         };
-        DispatchCallback(callback, ref dispParams);
+        DispatchAsValue(callback, ref dispParams);
     }
 
-    private static unsafe void DispatchCallback(IDispatch callback, ref DISPPARAMS dispParams)
+    private static unsafe void DispatchAsValue(IDispatch callback, ref DISPPARAMS dispParams)
     {
         PropVariant result;
         EXCEPINFO excepInfo;

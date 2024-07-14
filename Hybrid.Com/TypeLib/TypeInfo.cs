@@ -14,7 +14,7 @@ using VARDESC = Hybrid.Com.Dispatch.VARDESC;
 namespace Hybrid.Com.TypeLib;
 
 [GeneratedComClass]
-public partial class TypeInfo(Guid iid, int typeLibIndex, ITypeInfo? parentTypeInfo) : ITypeInfo
+public partial class TypeInfo(Guid iid, int typeLibIndex) : ITypeInfo
 {
     public unsafe TYPEATTR* GetTypeAttr()
     {

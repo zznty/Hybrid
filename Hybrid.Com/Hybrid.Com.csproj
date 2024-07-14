@@ -8,7 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Hybrid\Hybrid.csproj" />
+        <ProjectReference Include="..\Hybrid\Hybrid.csproj"/>
+        <ProjectReference Include="..\Hybrid.Com.SourceGenerator\Hybrid.Com.SourceGenerator.csproj" />
     </ItemGroup>
 
 </Project>

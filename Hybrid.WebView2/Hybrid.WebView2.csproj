@@ -9,8 +9,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Hybrid.Com\Hybrid.Com.csproj" />
-      <ProjectReference Include="..\Hybrid\Hybrid.csproj" />
+        <ProjectReference Include="..\Hybrid.Com\Hybrid.Com.csproj"/>
+    </ItemGroup>
+    
+    <ItemGroup>
+        <Content Include="..\Hybrid.WebView2.Native\x64\$(Configuration)\*">
+            <Visible>false</Visible>
+            <Pack>true</Pack>
+            <PackagePath>lib/runtimes/win-x64/native/%(FileName)%(Extension)</PackagePath>
+        </Content>
     </ItemGroup>
 
 </Project>

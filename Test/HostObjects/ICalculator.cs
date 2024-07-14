@@ -9,6 +9,7 @@ namespace Test.HostObjects;
 public partial interface ICalculator
 {
     int Add(int a, int b);
+    void SubtractAsync(int a, int b, Action<int> callback);
 }
 
 [ComVisible(true)]
@@ -19,5 +20,10 @@ public partial class Calculator : SharedHostObject, ICalculator
     public int Add(int a, int b)
     {
         return a + b;
+    }
+
+    public void SubtractAsync(int a, int b, Action<int> callback)
+    {
+        callback(a - b);
     }
 }

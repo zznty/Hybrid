@@ -10,19 +10,21 @@
         <InvariantGlobalization>true</InvariantGlobalization>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <NoWarn>SYSLIB1097</NoWarn>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Hybrid.WebView2\Hybrid.WebView2.csproj"/>
         <ProjectReference Include="..\Hybrid\Hybrid.csproj"/>
+        <ProjectReference Include="..\Hybrid.Com.SourceGenerator\Hybrid.Com.SourceGenerator.csproj">
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+            <OutputItemType>Analyzer</OutputItemType>
+        </ProjectReference>
         <ProjectReference Include="..\Hybrid.WebView2.Native\Hybrid.WebView2.Native.vcxproj">
             <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
             <OutputItemType>Content</OutputItemType>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </ProjectReference>
-        <ProjectReference Include="..\Hybrid.Com.SourceGenerator\Hybrid.Com.SourceGenerator.csproj">
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-            <OutputItemType>Analyzer</OutputItemType>
+            <Targets>Build;DebugSymbolsProjectOutputGroup</Targets>
         </ProjectReference>
     </ItemGroup>
 
