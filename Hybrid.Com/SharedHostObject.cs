@@ -11,17 +11,17 @@ namespace Hybrid.Com;
 [ComVisible(true)]
 public partial class SharedHostObject : IDispatch, ISharedHostObject
 {
-    private static Guid? _iid;
-    private Guid Iid => _iid ??= GetIid(this);
-
-    private static unsafe Guid GetIid(SharedHostObject sharedHostObject)
+    private unsafe Guid Iid
     {
-        var interfaceEntriesPtr = StrategyBasedComWrappers.DefaultIUnknownInterfaceDetailsStrategy.GetComExposedTypeDetails(sharedHostObject.GetType()
-            .TypeHandle)!.GetComInterfaceEntries(out var count);
+        get
+        {
+            var interfaceEntriesPtr = StrategyBasedComWrappers.DefaultIUnknownInterfaceDetailsStrategy.GetComExposedTypeDetails(GetType().TypeHandle)!
+                .GetComInterfaceEntries(out var count);
 
-        var entries = new ReadOnlySpan<ComWrappers.ComInterfaceEntry>(interfaceEntriesPtr, count);
+            var entries = new ReadOnlySpan<ComWrappers.ComInterfaceEntry>(interfaceEntriesPtr, count);
 
-        return entries[^1].IID;
+            return entries[^1].IID;
+        }
     }
 
     public int GetTypeInfoCount() => GetType() != typeof(SharedHostObject) ? 1 : 0;
