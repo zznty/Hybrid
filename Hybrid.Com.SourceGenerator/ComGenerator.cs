@@ -292,7 +292,7 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
 
     private static string MarshalTypeToVariant(ITypeSymbol type)
     {
-        return type.ToDisplayString() switch
+        return type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) switch
         {
             "string" => "VT_BSTR",
             "bool" => "VT_BOOL",
@@ -300,7 +300,7 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
             "long" => "VT_I8",
             "float" => "VT_R4",
             "double" => "VT_R8",
-            _ when type.TypeKind == TypeKind.Interface || type.ToDisplayString() == "object" => "VT_UNKNOWN",
+            _ when type.TypeKind == TypeKind.Interface || type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "object" => "VT_UNKNOWN",
             _ when type.TypeKind == TypeKind.Delegate => "VT_DISPATCH",
             "object" => "VT_UNKNOWN",
             "void" => "VT_EMPTY",
@@ -329,11 +329,11 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
 
     private static string EmitManagedToUnmanagedMarshal(string managedName, ITypeSymbol type)
     {
-        if (type.ToDisplayString() == "bool")
+        if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "bool")
             return $"({managedName} ? 1 : 0)";
         if (type.IsUnmanagedType)
             return managedName;
-        if (type.ToDisplayString() == "string")
+        if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "string")
             return $"global::System.Runtime.InteropServices.Marshalling.BStrStringMarshaller.ConvertToUnmanaged({managedName})";
         
         return $"global::System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller<{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>.ConvertToUnmanaged({managedName})";
@@ -341,11 +341,11 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
 
     private static string EmitUnmanagedToManagedMarshal(string unmanagedName, ITypeSymbol type)
     {
-        if (type.ToDisplayString() == "bool")
+        if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "bool")
             return $"({unmanagedName} != 0)";
         if (type.IsUnmanagedType)
             return unmanagedName;
-        if (type.ToDisplayString() == "string")
+        if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "string")
             return $"global::System.Runtime.InteropServices.Marshalling.BStrStringMarshaller.ConvertToManaged({unmanagedName})";
         if (type.TypeKind == TypeKind.Delegate)
         {
@@ -369,11 +369,11 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
     private static string MarshalType(ITypeSymbol type, RefKind refKind)
     {
         string typeName;
-        if (type.ToDisplayString() == "bool")
+        if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "bool")
             typeName = "int";
         else if (type.IsUnmanagedType)
             typeName =  type.ToDisplayString();
-        else if (type.ToDisplayString() == "string")
+        else if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "string")
             typeName =  "ushort*";
         else
             typeName =  "void*";
@@ -397,7 +397,7 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
     }
 
     private static bool IsPrimitiveType(ITypeSymbol symbol) =>
-        symbol.IsUnmanagedType || symbol.ToDisplayString() == "string";
+        symbol.IsUnmanagedType || symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "string";
 
     private static void EmitCoClassSource(SourceProductionContext context, CoClassDefinition classDefinition)
     {
