@@ -11,6 +11,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <NoWarn>SYSLIB1097</NoWarn>
         <IsPackable>false</IsPackable>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
 
     <ItemGroup>

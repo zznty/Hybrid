@@ -45,7 +45,9 @@ public class ComGenerator : IIncrementalGenerator
                         .Value is not string interfaceIidStr || !Guid.TryParse(interfaceIidStr, out var interfaceIid))
                     return InterfaceDefinition.Empty;
 
-                bool IsComVisible(ISymbol symbol) => symbol.GetAttributes().All(b =>
+                bool IsComVisible(ISymbol symbol) => !symbol.IsImplicitlyDeclared &&
+                                                     symbol is not IMethodSymbol { MethodKind: not MethodKind.Ordinary } &&
+                                                     symbol.GetAttributes().All(b =>
                     b.AttributeClass?.ToDisplayString() != typeof(ComVisibleAttribute).FullName ||
                     b.ConstructorArguments[0].Value is true);
 
@@ -58,6 +60,7 @@ public class ComGenerator : IIncrementalGenerator
     }
 
     private static bool IsTypeComVisible(ITypeSymbol symbol) =>
+        !symbol.IsImplicitlyDeclared &&
         symbol.GetAttributes().Any(b =>
             b.AttributeClass?.ToDisplayString() == typeof(ComVisibleAttribute).FullName &&
             b.ConstructorArguments[0].Value is true);
@@ -136,7 +139,7 @@ file sealed unsafe class ComDispatchInformation : global::Hybrid.Com.TypeLib.ICo
                             _ => throw new NotSupportedException()
                         }};
                         {string.Join(Environment.NewLine, (member.Member switch {
-                            IPropertySymbol propertySymbol when member.MemberType != InterfaceMemberType.PropertyGet => [propertySymbol.Type],
+                            IPropertySymbol propertySymbol => [propertySymbol.Type],
                             IMethodSymbol methodSymbol when member.IsPreserveSig => methodSymbol.Parameters.Select(b => b.Type),
                             IMethodSymbol methodSymbol when MemberDoesNotNeedResultPtr(member) => methodSymbol.Parameters.Select(b => b.Type),
                             IMethodSymbol methodSymbol => methodSymbol.Parameters.Select(b => b.Type).Append(methodSymbol.ReturnType),
@@ -154,7 +157,7 @@ file sealed unsafe class ComDispatchInformation : global::Hybrid.Com.TypeLib.ICo
                             }};")),
                             _ => string.Empty
                         }}
-                        {(MemberDoesNotNeedResultPtr(member) ? string.Empty : $"_details[{interfaceDefinition.VTableOffset + i}].Parameters[{((IMethodSymbol)member.Member).Parameters.Length + 1}].Flags = global::Hybrid.Com.TypeLib.DispatchParameterFlags.Out;")}
+                        {(member.MemberType != InterfaceMemberType.Method || MemberDoesNotNeedResultPtr(member) ? string.Empty : $"_details[{interfaceDefinition.VTableOffset + i}].Parameters[{((IMethodSymbol)member.Member).Parameters.Length + 1}].Flags = global::Hybrid.Com.TypeLib.DispatchParameterFlags.Out;")}
                         """
                 ))}}
             }
@@ -326,11 +329,11 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
 
     private static string EmitManagedToUnmanagedMarshal(string managedName, ITypeSymbol type)
     {
-        if (type.ToDisplayString() == typeof(bool).FullName)
+        if (type.ToDisplayString() == "bool")
             return $"({managedName} ? 1 : 0)";
         if (type.IsUnmanagedType)
             return managedName;
-        if (type.ToDisplayString() == typeof(string).FullName)
+        if (type.ToDisplayString() == "string")
             return $"global::System.Runtime.InteropServices.Marshalling.BStrStringMarshaller.ConvertToUnmanaged({managedName})";
         
         return $"global::System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller<{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>.ConvertToUnmanaged({managedName})";
@@ -338,11 +341,11 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
 
     private static string EmitUnmanagedToManagedMarshal(string unmanagedName, ITypeSymbol type)
     {
-        if (type.ToDisplayString() == typeof(bool).FullName)
+        if (type.ToDisplayString() == "bool")
             return $"({unmanagedName} != 0)";
         if (type.IsUnmanagedType)
             return unmanagedName;
-        if (type.ToDisplayString() == typeof(string).FullName)
+        if (type.ToDisplayString() == "string")
             return $"global::System.Runtime.InteropServices.Marshalling.BStrStringMarshaller.ConvertToManaged({unmanagedName})";
         if (type.TypeKind == TypeKind.Delegate)
         {
@@ -366,11 +369,11 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
     private static string MarshalType(ITypeSymbol type, RefKind refKind)
     {
         string typeName;
-        if (type.ToDisplayString() == typeof(bool).FullName)
+        if (type.ToDisplayString() == "bool")
             typeName = "int";
         else if (type.IsUnmanagedType)
             typeName =  type.ToDisplayString();
-        else if (type.ToDisplayString() == typeof(string).FullName)
+        else if (type.ToDisplayString() == "string")
             typeName =  "ushort*";
         else
             typeName =  "void*";
@@ -394,7 +397,7 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
     }
 
     private static bool IsPrimitiveType(ITypeSymbol symbol) =>
-        symbol.IsUnmanagedType || symbol.ToDisplayString() == typeof(string).FullName;
+        symbol.IsUnmanagedType || symbol.ToDisplayString() == "string";
 
     private static void EmitCoClassSource(SourceProductionContext context, CoClassDefinition classDefinition)
     {
