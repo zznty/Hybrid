@@ -300,7 +300,7 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
             "long" => "VT_I8",
             "float" => "VT_R4",
             "double" => "VT_R8",
-            _ when type.TypeKind == TypeKind.Interface => "VT_UNKNOWN",
+            _ when type.TypeKind == TypeKind.Interface || type.ToDisplayString() == "object" => "VT_UNKNOWN",
             _ when type.TypeKind == TypeKind.Delegate => "VT_DISPATCH",
             "object" => "VT_UNKNOWN",
             "void" => "VT_EMPTY",
@@ -356,7 +356,7 @@ namespace {{interfaceDefinition.Type.ContainingNamespace.ToDisplayString()}}
             
             return $$"""
                    ({{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}})(({{string.Join(", ", invoke.Parameters.Select(b => $"__{b.Name}"))}}) => {
-                        var __dispatch = global::System.Runtime.InteropServices.Marshalling.UniqueComInterfaceMarshaller<global::Hybrid.Com.Dispatch.IDispatch>.ConvertToManaged({{unmanagedName}});
+                        var __dispatch = global::System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller<global::Hybrid.Com.Dispatch.IDispatch>.ConvertToManaged({{unmanagedName}});
                         
                         global::Hybrid.Com.ComMarshalSupport.InvokeAsValue(__dispatch{{(invoke.Parameters.Any() ? ", " : string.Empty)}}{{string.Join(", ", invoke.Parameters.Select(b => $"__{b.Name}"))}});
                    })

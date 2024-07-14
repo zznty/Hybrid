@@ -35,7 +35,7 @@ public partial class WebView2HostedService(HybridHostOptions hostOptions, IEnume
             {
                 unsafe
                 {
-                    var hostObject = (nint)UniqueComInterfaceMarshaller<IDispatch>.ConvertToUnmanaged((IDispatch?)hostObjectFactory.Create());
+                    var hostObject = (nint)ComInterfaceMarshaller<IDispatch>.ConvertToUnmanaged((IDispatch?)hostObjectFactory.Create());
             
                     Marshal.ThrowExceptionForHR(AddHostObject(hostObjectFactory.Name, hostObject));
                 }
