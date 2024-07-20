@@ -370,11 +370,9 @@ public class ComGenerator : IIncrementalGenerator
                     $"delegate {type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} should not return a value");
 
             return $$"""
-                     ({{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}})(({{string.Join(", ", invoke.Parameters.Select(b => $"__{b.Name}"))}}) => {
-                          var __dispatch = global::System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller<global::Hybrid.Com.Dispatch.IDispatch>.ConvertToManaged({{unmanagedName}});
-                          
+                     (global::System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller<global::Hybrid.Com.Dispatch.IDispatch>.ConvertToManaged({{unmanagedName}}) is { } __dispatch ? ({{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}})(({{string.Join(", ", invoke.Parameters.Select(b => $"__{b.Name}"))}}) => {
                           global::Hybrid.Com.ComMarshalSupport.InvokeAsValue(__dispatch{{(invoke.Parameters.Any() ? ", " : string.Empty)}}{{string.Join(", ", invoke.Parameters.Select(b => $"__{b.Name}"))}});
-                     })
+                     }) : throw new global::System.NotImplementedException())
                      """;
         }
 

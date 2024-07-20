@@ -16,8 +16,9 @@ public partial class Calculator : SharedHostObject, ICalculator
         return a + b;
     }
 
-    public void SubtractAsync(int a, int b, Action<int> callback)
+    public async void SubtractAsync(int a, int b, Action<int> callback)
     {
+        await Task.Delay(2000);
         callback(a - b);
     }
 }
