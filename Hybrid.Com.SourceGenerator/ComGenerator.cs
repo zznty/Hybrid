@@ -341,7 +341,7 @@ public class ComGenerator : IIncrementalGenerator
     private static string EmitManagedToUnmanagedMarshal(string managedName, ITypeSymbol type)
     {
         if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "bool")
-            return $"({managedName} ? 1 : 0)";
+            return $"({managedName} ? -1 : 0)";
         if (type.IsUnmanagedType)
             return managedName;
         if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "string")
@@ -355,7 +355,7 @@ public class ComGenerator : IIncrementalGenerator
     private static string EmitUnmanagedToManagedMarshal(string unmanagedName, ITypeSymbol type)
     {
         if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "bool")
-            return $"({unmanagedName} != 0)";
+            return $"({unmanagedName} < 0)";
         if (type.IsUnmanagedType)
             return unmanagedName;
         if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "string")

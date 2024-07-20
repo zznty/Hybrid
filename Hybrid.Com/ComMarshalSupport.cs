@@ -48,7 +48,7 @@ public static partial class ComMarshalSupport
                 break;
             case bool b:
                 variant.VarType = VarEnum.VT_BOOL;
-                variant.Int32Value = b ? 1 : 0;
+                variant.Int32Value = b ? -1 : 0;
                 break;
             default:
                 throw new InvalidCastException($"{typeof(T)} is not supported as a variant type.");
@@ -68,7 +68,7 @@ public static partial class ComMarshalSupport
             VarEnum.VT_R4 => Unsafe.As<int, T>(ref value.Int32Value),
             VarEnum.VT_R8 => Unsafe.As<long, T>(ref value.Int64Value),
             VarEnum.VT_BSTR => (T)(object)Marshal.PtrToStringBSTR(value.Value),
-            VarEnum.VT_BOOL => Unsafe.As<int, T>(ref value.Int32Value),
+            VarEnum.VT_BOOL => (T)(object)(value.Int32Value < 0),
             VarEnum.VT_NULL => default,
             VarEnum.VT_EMPTY => default,
 #if DEBUG
