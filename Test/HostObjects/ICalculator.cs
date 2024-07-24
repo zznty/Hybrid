@@ -10,5 +10,6 @@ public partial interface ICalculator
 {
     string Version { get; }
     int Add(int a, int b);
-    void SubtractAsync(int a, int b, Action<int> callback);
+    void SubtractAsync(int a, int b, Action<int, bool> callback);
+    int[] Pow(int a, int b);
 }

@@ -41,62 +41,8 @@ public struct PropVariant
     /// <returns></returns>
     public object? Object
     {
-        get
-        {
-            switch (VarType)
-            {
-                case VarEnum.VT_BSTR:
-                    return Marshal.PtrToStringBSTR(Value);
-                case VarEnum.VT_EMPTY:
-                    return null;
-                case VarEnum.VT_FILETIME:
-                    try
-                    {
-                        return DateTime.FromFileTime(Int64Value);
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        return DateTime.MinValue;
-                    }
-                case VarEnum.VT_NULL:
-                    return null;
-                case VarEnum.VT_I2:
-                    return (short)Int32Value;
-                case VarEnum.VT_I4:
-                    return Int32Value;
-                case VarEnum.VT_R4:
-                    return Unsafe.BitCast<int, float>(Int32Value);
-                case VarEnum.VT_R8:
-                    return Unsafe.BitCast<long, double>(Int64Value);
-                case VarEnum.VT_DATE:
-                    return DateTime.FromOADate(Unsafe.BitCast<long, double>(Int64Value));
-                case VarEnum.VT_BOOL:
-                    return Unsafe.BitCast<int, bool>(Int32Value);
-                case VarEnum.VT_DISPATCH:
-                case VarEnum.VT_UNKNOWN:
-                    return ComWrappers.TryGetObject(Value, out var instance)
-                        ? instance
-                        : ComMarshalSupport.Wrapper.GetOrCreateObjectForComInstance(Value, CreateObjectFlags.None);
-                case VarEnum.VT_I1:
-                    return Unsafe.BitCast<int, sbyte>(Int32Value);
-                case VarEnum.VT_UI1:
-                    return Unsafe.BitCast<int, byte>(Int32Value);
-                case VarEnum.VT_UI2:
-                    return Unsafe.BitCast<uint, ushort>(UInt32Value);
-                case VarEnum.VT_UI4:
-                    return UInt32Value;
-                case VarEnum.VT_I8:
-                    return Int64Value;
-                case VarEnum.VT_UI8:
-                    return UInt64Value;
-                case VarEnum.VT_INT:
-                    return Int32Value;
-                case VarEnum.VT_UINT:
-                    return UInt32Value;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+        get => this.AsObject();
+        set => this.SetObject(value);
     }
 
     /// <summary>

@@ -18,6 +18,17 @@ struct DispatchParameterDetails
     DispatchParameterFlags flags;
 };
 
+void UnwrapVariant(VARIANT* var)
+{
+    if (var->vt == VT_VARIANT)
+    {
+        const auto innerVar = var->pvarVal;
+        var->vt = innerVar->vt;
+        var->byref = innerVar->byref;
+        CoTaskMemFree(innerVar);
+    }    
+}
+
 HRESULT CallHResultWithReturnValue(DCCallVM* vm, const PVOID member, VARIANT* result)
 {
     void* resultPtr;
@@ -26,6 +37,7 @@ HRESULT CallHResultWithReturnValue(DCCallVM* vm, const PVOID member, VARIANT* re
     const auto hResult = dcCallInt(vm, member);
 
     result->byref = resultPtr;
+    
     return hResult;
 }
 
@@ -46,43 +58,55 @@ extern "C" {
             dcArgPointer(vm, instance);
             for (int i = params->cArgs - 1; i >= 0; --i)
             {
-                if (params->rgvarg[i].vt != details[params->cArgs - i].type)
+                const auto paramVt = details[params->cArgs - i].type;
+                const auto arg = &params->rgvarg[i];
+                if (arg->vt != paramVt && paramVt == VT_VARIANT && arg->vt != VT_VARIANT) // wrap value into variant if func expects variant parameter
+                {
+                    const auto var = static_cast<VARIANT*>(CoTaskMemAlloc(sizeof(VARIANT)));
+
+                    var->vt = arg->vt;
+                    var->byref = arg->byref;
+
+                    arg->vt = VT_VARIANT;
+                    arg->pvarVal = var;
+                }
+                else if (arg->vt != paramVt)
                     return DISP_E_BADVARTYPE;
                 
-                switch (params->rgvarg[i].vt)
+                switch (arg->vt)
                 {
                     case VT_VOID:
                     case VT_PTR:
-                        dcArgPointer(vm, params->rgvarg[i].byref);
+                        dcArgPointer(vm, arg->byref);
                         break;
                     case VT_I1:
                     case VT_UI1:
-                        dcArgChar(vm, params->rgvarg[i].cVal);
+                        dcArgChar(vm, arg->cVal);
                         break;
                     case VT_I2:
                     case VT_UI2:
-                        dcArgShort(vm, params->rgvarg[i].iVal);
+                        dcArgShort(vm, arg->iVal);
                         break;
                     case VT_I4:
                     case VT_UI4:
                     case VT_HRESULT:
-                        dcArgInt(vm, params->rgvarg[i].intVal);
+                        dcArgInt(vm, arg->intVal);
                         break;
                     case VT_I8:
                     case VT_UI8:
-                        dcArgLongLong(vm, params->rgvarg[i].llVal);
+                        dcArgLongLong(vm, arg->llVal);
                         break;
                     case VT_R4:
-                        dcArgFloat(vm, params->rgvarg[i].fltVal);
+                        dcArgFloat(vm, arg->fltVal);
                         break;
                     case VT_R8:
-                        dcArgDouble(vm, params->rgvarg[i].dblVal);
+                        dcArgDouble(vm, arg->dblVal);
                         break;
                     case VT_BOOL:
-                        dcArgBool(vm, params->rgvarg[i].boolVal);
+                        dcArgBool(vm, arg->boolVal);
                         break;
                     default:
-                        dcArgPointer(vm, params->rgvarg[i].byref);
+                        dcArgPointer(vm, arg->byref);
                         break;
                 }
             }
@@ -138,7 +162,19 @@ extern "C" {
         }
         __finally
         {
-            dcFree(vm);   
+            dcFree(vm);
+
+            for (size_t i = 0; i < params->cArgs; ++i)
+            {
+                if (params->rgvarg[i].vt == VT_VARIANT)
+                {
+                    const auto var = static_cast<VARIANT*>(params->rgvarg[i].byref);
+                    if (var != nullptr)
+                        CoTaskMemFree(var);
+                }
+            }
+
+            UnwrapVariant(result);
         }
 
         return S_OK;

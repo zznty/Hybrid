@@ -16,9 +16,19 @@ public partial class Calculator : SharedHostObject, ICalculator
         return a + b;
     }
 
-    public async void SubtractAsync(int a, int b, Action<int> callback)
+    public async void SubtractAsync(int a, int b, Action<int, bool> callback)
     {
         await Task.Delay(2000);
-        callback(a - b);
+        var result = a - b;
+        callback(result, result > 0);
+    }
+
+    public int[] Pow(int a, int b)
+    {
+        var arr = new int[b - 1];
+        for (var i = 0; i < arr.Length; i++)
+            arr[i] = i == 0 ? a : arr[i - 1] * arr[i - 1];
+        
+        return arr;
     }
 }

@@ -127,8 +127,8 @@ public class ComGenerator : IIncrementalGenerator
                                        { MemberType: InterfaceMemberType.Method, Member: IMethodSymbol methodSymbol } => methodSymbol.Parameters.Length + (MemberDoesNotNeedResultPtr(member) ? 0 : 1), // +1 for the return value
                                        _ => 0
                                    }}));
-                                   _details[{interfaceDefinition.VTableOffset + i}].Parameters[0].Type = global::System.Runtime.InteropServices.VarEnum.{member.Member switch {
-                                       IMethodSymbol or IPropertySymbol when !member.IsPreserveSig => "VT_HRESULT",
+                                   _details[{interfaceDefinition.VTableOffset + i}].Parameters[0].Type = {member.Member switch {
+                                       IMethodSymbol or IPropertySymbol when !member.IsPreserveSig => "global::System.Runtime.InteropServices.VarEnum.VT_HRESULT",
                                        IMethodSymbol methodSymbol => MarshalTypeToVariant(methodSymbol.ReturnType),
                                        _ => throw new NotSupportedException()
                                    }};
@@ -138,7 +138,7 @@ public class ComGenerator : IIncrementalGenerator
                                        IMethodSymbol methodSymbol when MemberDoesNotNeedResultPtr(member) => methodSymbol.Parameters.Select(b => b.Type),
                                        IMethodSymbol methodSymbol => methodSymbol.Parameters.Select(b => b.Type).Append(methodSymbol.ReturnType),
                                        _ => []
-                                   }).Select((type, paramIdx) => $"_details[{interfaceDefinition.VTableOffset + i}].Parameters[{paramIdx + 1}].Type = global::System.Runtime.InteropServices.VarEnum.{MarshalTypeToVariant(type)};"))}
+                                   }).Select((type, paramIdx) => $"_details[{interfaceDefinition.VTableOffset + i}].Parameters[{paramIdx + 1}].Type = {MarshalTypeToVariant(type)};"))}
                                    {member.MemberType switch {
                                        InterfaceMemberType.PropertyGet => $"_details[{interfaceDefinition.VTableOffset + i}].Parameters[1].Flags = global::Hybrid.Com.TypeLib.DispatchParameterFlags.Out;",
                                        InterfaceMemberType.PropertyPutRef => $"_details[{interfaceDefinition.VTableOffset + i}].Parameters[1].Flags = global::Hybrid.Com.TypeLib.DispatchParameterFlags.In;",
@@ -301,7 +301,7 @@ public class ComGenerator : IIncrementalGenerator
 
     private static string MarshalTypeToVariant(ITypeSymbol type)
     {
-        return type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) switch
+        return $"(global::System.Runtime.InteropServices.VarEnum)(global::System.Runtime.InteropServices.VarEnum.{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) switch
         {
             "string" => "VT_BSTR",
             "bool" => "VT_BOOL",
@@ -309,9 +309,10 @@ public class ComGenerator : IIncrementalGenerator
             "long" => "VT_I8",
             "float" => "VT_R4",
             "double" => "VT_R8",
-            _ when type.TypeKind == TypeKind.Interface ||
-                   type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "object" => "VT_UNKNOWN",
+            _ when type.TypeKind == TypeKind.Interface => "VT_UNKNOWN",
             _ when type.TypeKind == TypeKind.Delegate => "VT_DISPATCH",
+            _ when type is IArrayTypeSymbol { TypeKind: TypeKind.Array } arrayType => $"VT_ARRAY + (int){MarshalTypeToVariant(arrayType.ElementType)}",
+            _ when type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "object" => "VT_VARIANT",
             "object" => "VT_UNKNOWN",
             "void" => "VT_EMPTY",
             "nint" or "IntPtr" => "VT_PTR",
@@ -324,7 +325,7 @@ public class ComGenerator : IIncrementalGenerator
             "char" => "VT_UI2",
             _ => throw new NotSupportedException(
                 $"{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} is not supported for variant marshalling")
-        };
+        }})";
     }
 
     private static string EmitRefKindExpand(RefKind refKind)
@@ -347,6 +348,10 @@ public class ComGenerator : IIncrementalGenerator
         if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "string")
             return
                 $"global::System.Runtime.InteropServices.Marshalling.BStrStringMarshaller.ConvertToUnmanaged({managedName})";
+        if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "object")
+            return $"global::Hybrid.Com.ComMarshalSupport.CreateVariant({managedName})";
+        if (type.TypeKind == TypeKind.Array)
+            return $"global::Hybrid.Com.ComMarshalSupport.ToSafeArray({managedName})";
 
         return
             $"global::System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller<{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>.ConvertToUnmanaged({managedName})";
@@ -361,6 +366,8 @@ public class ComGenerator : IIncrementalGenerator
         if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "string")
             return
                 $"global::System.Runtime.InteropServices.Marshalling.BStrStringMarshaller.ConvertToManaged({unmanagedName})";
+        if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "object")
+            return $"(*{unmanagedName}).Object";
         if (type.TypeKind == TypeKind.Delegate)
         {
             var invoke = type.GetMembers("Invoke").OfType<IMethodSymbol>().Single();
@@ -375,6 +382,8 @@ public class ComGenerator : IIncrementalGenerator
                      }) : throw new global::System.NotImplementedException())
                      """;
         }
+        if (type.TypeKind == TypeKind.Array)
+            return $"global::Hybrid.Com.ComMarshalSupport.FromSafeArray<{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>({unmanagedName})";
 
         return
             $"global::System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller<{type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>.ConvertToManaged({unmanagedName})";
@@ -389,6 +398,10 @@ public class ComGenerator : IIncrementalGenerator
             typeName = type.ToDisplayString();
         else if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "string")
             typeName = "ushort*";
+        else if (type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "object")
+            typeName = "global::Hybrid.Com.Dispatch.PropVariant*";
+        else if (type.TypeKind == TypeKind.Array)
+            typeName = "global::Hybrid.Com.Dispatch.SafeArray*";
         else
             typeName = "void*";
 
