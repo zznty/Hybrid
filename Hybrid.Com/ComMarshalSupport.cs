@@ -85,8 +85,6 @@ public static partial class ComMarshalSupport
 
     public static VarEnum GetVarType(Type type)
     {
-        if (type.IsInterface)
-            return VarEnum.VT_UNKNOWN;
         if (type == typeof(string))
             return VarEnum.VT_BSTR;
         if (type == typeof(bool))
@@ -115,6 +113,8 @@ public static partial class ComMarshalSupport
             return VarEnum.VT_DISPATCH;
         if (type.IsArray)
             return VarEnum.VT_ARRAY + (int)GetVarType(type.GetElementType()!);
+        if (type.IsAssignableTo(typeof(IDispatch)))
+            return VarEnum.VT_UNKNOWN;
         
         throw new NotSupportedException($"{type} is not supported as a variant type.");
     }
