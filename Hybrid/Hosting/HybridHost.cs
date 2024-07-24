@@ -19,10 +19,14 @@ public sealed class HybridHost : IHost
     {
         using var window = Window.Create(Services.GetRequiredService<HybridHostOptions>().WindowOptions);
 
+        using var context = new BufferedSynchronizationContext();
+        SynchronizationContext.SetSynchronizationContext(context);
+
         (Services.GetRequiredService<IHostLifetime>() as HybridHostLifetime)?.SetWindow(window);
         
         // this is like that because on some platforms there is a requirement for windowing apis to be invoked from the first thread
-        window.Run();
+        // ReSharper disable once AccessToDisposedClosure
+        window.Run(() => context.Dispatch());
         
         return Task.CompletedTask;
     }
