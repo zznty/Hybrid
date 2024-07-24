@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hybrid.Hosting;
 
@@ -61,10 +61,11 @@ public sealed class HybridHostBuilder : IHostBuilder
 
     public IHost Build()
     {
-        _services.AddSingleton(_appConfigurationBuilder.Build());
-        _services.AddSingleton<HybridHostLifetime>();
-        _services.AddSingleton<IHostLifetime>(s => s.GetRequiredService<HybridHostLifetime>());
-        _services.AddSingleton<IHostApplicationLifetime>(s => s.GetRequiredService<HybridHostLifetime>());
+        _services.TryAddSingleton(_appConfigurationBuilder.Build());
+        _services.TryAddSingleton<HybridHostLifetime>();
+        _services.TryAddSingleton<IHostLifetime>(s => s.GetRequiredService<HybridHostLifetime>());
+        _services.TryAddSingleton<IHostApplicationLifetime>(s => s.GetRequiredService<HybridHostLifetime>());
+        _services.TryAddSingleton<IHostEnvironment, HybridHostEnvironment>();
         
         return new HybridHost(_services.BuildServiceProvider());
     }
