@@ -345,6 +345,12 @@ public static partial class ComMarshalSupport
             case VarEnum.VT_UINT:
                 variant.UInt32Value = (uint)value;
                 break;
+            case VarEnum.VT_UNKNOWN or VarEnum.VT_DISPATCH:
+                unsafe
+                {
+                    variant.Value = (nint)ComInterfaceMarshaller<object>.ConvertToUnmanaged(value);
+                }
+                break;
             case > VarEnum.VT_ARRAY:
                 var array = (Array)value;
                 unsafe
