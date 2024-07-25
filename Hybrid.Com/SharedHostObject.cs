@@ -20,7 +20,8 @@ public partial class SharedHostObject : IDispatch, ISharedHostObject
 
             var entries = new ReadOnlySpan<ComWrappers.ComInterfaceEntry>(interfaceEntriesPtr, count);
 
-            return entries[^1].IID;
+            // ideally it should be the last, but IDispatch is always the last, but we need actual this interface
+            return entries[^2].IID;
         }
     }
 
