@@ -18,22 +18,17 @@ struct DispatchParameterDetails
     DispatchParameterFlags flags;
 };
 
-HRESULT UnwrapVariant(VARIANT* var)
+void UnwrapVariant(VARIANT* var)
 {
     if (var->vt == VT_VARIANT)
     {
         const auto innerVar = var->pvarVal;
 
-        auto hr = VariantCopy(var, innerVar);
-        if (FAILED(hr)) return hr;
-
-        hr = VariantClear(var);
-        if (FAILED(hr)) return hr;
+        var->vt = innerVar->vt;
+        var->byref = innerVar->byref;
         
         CoTaskMemFree(innerVar);
     }
-
-    return S_OK;
 }
 
 HRESULT CallHResultWithReturnValue(DCCallVM* vm, const PVOID member, VARIANT* result)
@@ -184,7 +179,7 @@ extern "C" {
                 }
             }
 
-            hr = UnwrapVariant(result);
+            UnwrapVariant(result);
         }
 
         return hr;
