@@ -34,6 +34,7 @@ public class ComGenerator : IIncrementalGenerator
                     return new(coClassType, coClassIid,
                         coClassType.AllInterfaces.Where(IsTypeComVisible)
                             .Select(b => b.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+                            .Reverse() // reverse interfaces to be ordered base -> derived instead of default derived -> base
                             .ToImmutableArray());
                 })
             .Where(b => b != CoClassDefinition.Empty), EmitCoClassSource);

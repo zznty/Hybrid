@@ -8,7 +8,7 @@ public sealed record HybridHostOptions(string ApplicationName, string Environmen
     public static HybridHostOptions Default => new("Hybrid Application",
         Debugger.IsAttached ? "Development" : "Production",
         AppContext.BaseDirectory,
-        "http: //localhost:5173",
+        "http://localhost:5173",
         WindowOptions.Default with
         {
             API = GraphicsAPI.None
