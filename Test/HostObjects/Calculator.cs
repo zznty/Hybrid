@@ -7,7 +7,7 @@ namespace Test.HostObjects;
 [ComVisible(true)]
 [Guid("5343131b-7185-4402-858a-8520f63c4712")]
 [SharedHostObject<ICalculator, Calculator>]
-public partial class Calculator : SharedHostObject, ICalculator
+public partial class Calculator : SharedHostObject, ICalculator2
 {
     public string Version => typeof(Calculator).Assembly.GetName().Version?.ToString() ?? "0.0.0.0";
     
@@ -31,4 +31,6 @@ public partial class Calculator : SharedHostObject, ICalculator
         
         return arr;
     }
+
+    public int Max(int a, int b) => a > b ? a : b;
 }

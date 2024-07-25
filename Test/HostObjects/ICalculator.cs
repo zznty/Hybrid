@@ -13,3 +13,11 @@ public partial interface ICalculator
     void SubtractAsync(int a, int b, Action<int, bool> callback);
     int[] Pow(int a, int b);
 }
+
+[ComVisible(true)]
+[Guid("41c86542-1197-4a5b-9274-988e46a8e35d")]
+[SharedHostObjectDefinition]
+public partial interface ICalculator2 : ICalculator 
+{
+    int Max(int a, int b);
+}

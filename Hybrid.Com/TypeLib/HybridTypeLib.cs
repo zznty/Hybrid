@@ -10,7 +10,7 @@ public partial class HybridTypeLib : ITypeLib
 {
     private static readonly Guid TypeLibIid = new("687cce8c-7c74-472a-a75c-25fa45e5fa8d");
     private readonly List<Guid> _indexIidMap = [];
-    private readonly Dictionary<Guid, (ITypeInfo Info, TYPEKIND Kind, RuntimeTypeHandle Handle)> _typeMap = [];
+    private readonly Dictionary<Guid, (TypeInfo Info, TYPEKIND Kind, RuntimeTypeHandle Handle)> _typeMap = [];
     private readonly HashSet<string> _typeNames = new(StringComparer.OrdinalIgnoreCase);
 
     public static HybridTypeLib Global { get; } = new();
@@ -42,7 +42,7 @@ public partial class HybridTypeLib : ITypeLib
             
             _indexIidMap.Add(entry.IID);
             _typeMap.Add(entry.IID,
-                (new TypeInfo(entry.IID, _indexIidMap.Count), TYPEKIND.TKIND_INTERFACE, typeof(TInterface).TypeHandle));
+                (new TypeInfo(entry.IID, _indexIidMap.Count, i == 0 ? null : _typeMap[_indexIidMap[^2]].Info), TYPEKIND.TKIND_INTERFACE, typeof(TInterface).TypeHandle));
         }
     }
     

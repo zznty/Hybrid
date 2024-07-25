@@ -14,8 +14,9 @@ using VARDESC = Hybrid.Com.Dispatch.VARDESC;
 namespace Hybrid.Com.TypeLib;
 
 [GeneratedComClass]
-public partial class TypeInfo(Guid iid, int typeLibIndex) : ITypeInfo
+public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo) : ITypeInfo
 {
+    private ushort TypeOffset => (ushort)(1 + baseTypeInfo?.TypeOffset ?? 0); 
     public unsafe TYPEATTR* GetTypeAttr()
     {
         throw new NotImplementedException();
@@ -59,26 +60,30 @@ public partial class TypeInfo(Guid iid, int typeLibIndex) : ITypeInfo
         for (var namesIndex = 0; namesIndex < rgszNames.Length; namesIndex++)
         {
             var namePtr = Utf16StringMarshaller.ConvertToUnmanaged(rgszNames[namesIndex]);
+            var success = false;
             try
             {
-                var success = false;
                 for (var i = 0; i < entriesCount; i++)
                 {
                     if (Utf16StringEquals(namePtr, entriesPtr[i].MemberName))
                     {
-                        pMemId[namesIndex] = i + 1;
+                        pMemId[namesIndex] = (ushort)i + 1 | TypeOffset << 16;
                         success = true;
                         break;
                     }
                 }
-
-                if (!success)
-                    throw new KeyNotFoundException($"Name {rgszNames[namesIndex]} not found in type {Type.GetTypeFromHandle(typeHandle)}.");
             }
             finally
             {
                 Utf16StringMarshaller.Free(namePtr);
             }
+            
+            if (success) return;
+            
+            if (baseTypeInfo == null)
+                throw new KeyNotFoundException($"Name {rgszNames[namesIndex]} not found in type {Type.GetTypeFromHandle(typeHandle)}.");
+            
+            baseTypeInfo.GetIDsOfNames(rgszNames, cNames, pMemId);
         }
     }
 
@@ -105,10 +110,12 @@ public partial class TypeInfo(Guid iid, int typeLibIndex) : ITypeInfo
     {
         var typeHandle = HybridTypeLib.Global.ResolveTypeHandleFromIid(iid);
         var entriesPtr = IComInterfaceDispatchDetails.GetComInterfaceDispatchDetailsFromTypeHandle(typeHandle, out var entriesCount);
+
+        if (memid >> 16 < TypeOffset)
+            return baseTypeInfo?.Invoke(pvInstance, memid, wFlags, ref pDispParams, pVarResult, pExcepInfo, puArgErr) ??
+                   throw new ArgumentOutOfRangeException(nameof(memid));
         
-        var index = memid - 1;
-        if (index < 0 || index >= entriesCount)
-            throw new ArgumentOutOfRangeException(nameof(memid));
+        var index = (memid & 0xffff) - 1;
         
         entriesPtr = &entriesPtr[index];
 
