@@ -33,4 +33,5 @@ public partial class Calculator : SharedHostObject, ICalculator2
     }
 
     public int Max(int a, int b) => a > b ? a : b;
+    public object? TestObject => throw new InvalidOperationException();
 }

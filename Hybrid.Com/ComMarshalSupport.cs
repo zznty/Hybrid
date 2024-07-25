@@ -10,6 +10,8 @@ public static partial class ComMarshalSupport
 {
     public static readonly ComWrappers Wrapper = new StrategyBasedComWrappers();
 
+    public static ThreadLocal<Exception?> LastException { get; } = new();
+
     public static unsafe void WriteVariant<T>(this ref PropVariant variant, T? value)
     {
         switch (value)

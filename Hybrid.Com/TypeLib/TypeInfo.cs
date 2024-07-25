@@ -4,6 +4,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.InteropServices.Marshalling;
 using Hybrid.Com.Dispatch;
 using DISPPARAMS = Hybrid.Com.Dispatch.DISPPARAMS;
+using EXCEPINFO = Hybrid.Com.Dispatch.EXCEPINFO;
 using FUNCDESC = Hybrid.Com.Dispatch.FUNCDESC;
 using ITypeComp = Hybrid.Com.Dispatch.ITypeComp;
 using ITypeInfo = Hybrid.Com.Dispatch.ITypeInfo;
@@ -125,7 +126,20 @@ public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo
         var funcPtr = StrategyBasedComWrappers.DefaultIUnknownInterfaceDetailsStrategy.GetIUnknownDerivedDetails(typeHandle)!
                 .ManagedVirtualMethodTable[index];
 
-        return DispatchMember(pvInstance, funcPtr, entriesPtr->Parameters, entriesPtr->ParameterCount, ref pDispParams, pVarResult);
+        var hr = DispatchMember(pvInstance, funcPtr, entriesPtr->Parameters, entriesPtr->ParameterCount, ref pDispParams, pVarResult);
+
+        if (hr < 0 && ComMarshalSupport.LastException.Value is { } lastException)
+        {
+            ComMarshalSupport.LastException.Value = null;
+            
+            ref var exceptionInfo = ref *(EXCEPINFO*)pExcepInfo;
+            exceptionInfo.bstrSource = Marshal.StringToBSTR(lastException.Source);
+            exceptionInfo.bstrDescription = Marshal.StringToBSTR(lastException.Message);
+            exceptionInfo.bstrHelpFile = Marshal.StringToBSTR(lastException.HelpLink);
+            exceptionInfo.scode = lastException.HResult;
+        }
+
+        return hr;
     }
 
     public void GetDocumentation(int index, out string strName, out string strDocString, out int dwHelpContext,

@@ -18,15 +18,22 @@ struct DispatchParameterDetails
     DispatchParameterFlags flags;
 };
 
-void UnwrapVariant(VARIANT* var)
+HRESULT UnwrapVariant(VARIANT* var)
 {
     if (var->vt == VT_VARIANT)
     {
         const auto innerVar = var->pvarVal;
-        var->vt = innerVar->vt;
-        var->byref = innerVar->byref;
+
+        auto hr = VariantCopy(var, innerVar);
+        if (FAILED(hr)) return hr;
+
+        hr = VariantClear(var);
+        if (FAILED(hr)) return hr;
+        
         CoTaskMemFree(innerVar);
-    }    
+    }
+
+    return S_OK;
 }
 
 HRESULT CallHResultWithReturnValue(DCCallVM* vm, const PVOID member, VARIANT* result)
@@ -50,6 +57,7 @@ extern "C" {
         
         const auto vm = dcNewCallVM(4096);
 
+        HRESULT hr = S_OK;
         __try
         {
             dcMode(vm, DC_CALL_C_X64_WIN64);
@@ -115,8 +123,10 @@ extern "C" {
 
             if (cDetails - 1 > params->cArgs && details[0].type == VT_HRESULT && details[cDetails - 1].flags & Out)
             {
-                result->vt = details[cDetails - 1].type;
-                return CallHResultWithReturnValue(vm, member, result);
+                hr = CallHResultWithReturnValue(vm, member, result);
+                if (SUCCEEDED(hr))
+                    result->vt = details[cDetails - 1].type;
+                return hr;
             }
             
             result->vt = details[0].type;
@@ -169,15 +179,15 @@ extern "C" {
                 if (params->rgvarg[i].vt == VT_VARIANT)
                 {
                     const auto var = static_cast<VARIANT*>(params->rgvarg[i].byref);
-                    if (var != nullptr)
+                    if (var != nullptr && SUCCEEDED(VariantClear(var)))
                         CoTaskMemFree(var);
                 }
             }
 
-            UnwrapVariant(result);
+            hr = UnwrapVariant(result);
         }
 
-        return S_OK;
+        return hr;
     }
 }
 

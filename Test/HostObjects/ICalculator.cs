@@ -20,4 +20,5 @@ public partial interface ICalculator
 public partial interface ICalculator2 : ICalculator 
 {
     int Max(int a, int b);
+    object? TestObject { get; }
 }

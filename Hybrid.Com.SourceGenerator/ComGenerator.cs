@@ -271,6 +271,7 @@ public class ComGenerator : IIncrementalGenerator
                             }
                             catch (global::System.Exception __exception)
                             {
+                                global::Hybrid.Com.ComMarshalSupport.LastException.Value = __exception;
                                 {{(member.IsPreserveSig ? "throw" : "return global::System.Runtime.InteropServices.Marshalling.ExceptionAsHResultMarshaller<int>.ConvertToUnmanaged(__exception)")}};
                             }
                             
