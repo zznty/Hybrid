@@ -76,7 +76,7 @@ internal class HybridHostLifetime(IEnumerable<IHostedService> hostedServices, IL
 
     public void StopApplication()
     {
-        _window?.Invoke(() => _window.Close());
+        _window?.Close();
     }
 
     public CancellationToken ApplicationStarted => _startedTokenSource.Token;
