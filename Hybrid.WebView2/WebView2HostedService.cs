@@ -11,7 +11,8 @@ public partial class WebView2HostedService(HybridHostOptions hostOptions, IEnume
 {
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        return Task.CompletedTask; // TODO graceful shutdown of WebView2
+        Marshal.ThrowExceptionForHR(CloseWebView());
+        return Task.CompletedTask;
     }
 
     public Task StartAsync(IWindow window, CancellationToken cancellationToken)
@@ -53,4 +54,7 @@ public partial class WebView2HostedService(HybridHostOptions hostOptions, IEnume
     
     [LibraryImport("Hybrid.WebView2.Native", StringMarshalling = StringMarshalling.Utf16)]
     private static partial int AddStartupScript(string script);
+    
+    [LibraryImport("Hybrid.WebView2.Native", EntryPoint = "Close", StringMarshalling = StringMarshalling.Utf16)]
+    private static partial int CloseWebView();
 }

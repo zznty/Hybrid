@@ -57,6 +57,18 @@ extern "C" {
 				}).Get());
     }
 
+	__declspec(dllexport) HRESULT Close()
+	{
+		if (!webviewController) return E_HANDLE;
+		const auto hr = webviewController->Close();
+    	if (FAILED(hr)) return hr;
+
+		webviewController.reset();
+		webview.reset();
+
+		return S_OK;
+	}
+
 	__declspec(dllexport) HRESULT Resize(const HWND hWnd)
 	{
     	if (!webviewController) return S_OK;
