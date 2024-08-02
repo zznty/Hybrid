@@ -19,9 +19,6 @@ public partial class WebView2HostedService(HybridHostOptions hostOptions, IEnume
         if (window.Native?.Win32?.Hwnd is not { } hWnd)
             throw new PlatformNotSupportedException("WebView2 is supported only for Win32 windowing");
         
-        Thread.CurrentThread.SetApartmentState(ApartmentState.Unknown);
-        Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
-        
         window.Resize += _ => Marshal.ThrowExceptionForHR(ResizeWebView(hWnd));
         
         Marshal.ThrowExceptionForHR(CreateWebView(hWnd, hostOptions.Url, hostOptions.ContentRoot, () =>

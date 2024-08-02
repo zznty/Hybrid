@@ -3,13 +3,22 @@ using Hybrid.WebView2.Extensions;
 using Microsoft.Extensions.Hosting;
 using Test.HostObjects;
 
-var builder = new HybridHostBuilder();
+namespace Test;
 
-builder.ConfigureServices((_, collection) =>
+internal static class Program
 {
-    collection.AddWebView2()
-        .AddHostObject<ICalculator, Calculator>("calculator")
-        .AddStartupScript("chrome.webview.hostObjects.calculator.Add(1, 2).then(sum => alert(`1 + 2 is equal to ${sum}!`)).catch(console.error);");
-});
+    [STAThread]
+    public static void Main()
+    {
+        var builder = new HybridHostBuilder();
 
-builder.Build().Run();
+        builder.ConfigureServices((_, collection) =>
+        {
+            collection.AddWebView2()
+                .AddHostObject<ICalculator, Calculator>("calculator")
+                .AddStartupScript("chrome.webview.hostObjects.calculator.Add(1, 2).then(sum => alert(`1 + 2 is equal to ${sum}!`)).catch(console.error);");
+        });
+
+        builder.Build().Run();
+    }
+}
