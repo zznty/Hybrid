@@ -1,4 +1,4 @@
-﻿# Hybrid (.NET AOT + WebViews
+﻿# Hybrid (.NET AOT + WebViews)
 
 ## The problem
 
