@@ -61,7 +61,11 @@ public class ComGenerator : IIncrementalGenerator
             .Where(b => b != InterfaceDefinition.Empty);
         
         context.RegisterSourceOutput(sharedObjectDefinitionProvider, EmitInterfaceSource);
-        context.RegisterSourceOutput(sharedObjectDefinitionProvider, EmitDispatchInformationSource);
+        context.RegisterSourceOutput(sharedObjectDefinitionProvider
+            .Where(b => b.Type.GetAttributes()
+                .First(attr => attr.AttributeClass?.ToDisplayString() == SharedHostObjectDefinitionAttribute)
+                .NamedArguments.All(pair => pair.Key != "EmitDispatchInformation" || pair.Value.Value is true)),
+            EmitDispatchInformationSource);
     }
 
     private static bool IsTypeComVisible(ITypeSymbol symbol) =>
@@ -492,11 +496,35 @@ public class ComGenerator : IIncrementalGenerator
 public record CoClassDefinition(ITypeSymbol Type, Guid Iid, ImmutableArray<string> InterfaceNames)
 {
     public static CoClassDefinition Empty => new(null!, Guid.Empty, ImmutableArray<string>.Empty);
+
+    public override int GetHashCode()
+    {
+        return Iid.GetHashCode();
+    }
+
+    public virtual bool Equals(CoClassDefinition? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Iid == other.Iid;
+    }
 }
 
 public record InterfaceDefinition(ITypeSymbol Type, Guid Iid, int VTableOffset, ImmutableArray<InterfaceMember> Members)
 {
     public static InterfaceDefinition Empty => new(null!, Guid.Empty, 0, ImmutableArray<InterfaceMember>.Empty);
+
+    public override int GetHashCode()
+    {
+        return Iid.GetHashCode();
+    }
+
+    public virtual bool Equals(InterfaceDefinition? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Iid == other.Iid;
+    }
 }
 
 public record InterfaceMember(string Name, InterfaceMemberType MemberType, ISymbol Member)
@@ -509,6 +537,15 @@ public record InterfaceMember(string Name, InterfaceMemberType MemberType, ISymb
 
     public bool IsPreserveSig => Member.GetAttributes()
         .Any(b => b.AttributeClass?.ToDisplayString() == typeof(PreserveSigAttribute).FullName);
+
+    public override int GetHashCode() => AbiName.GetHashCode();
+
+    public virtual bool Equals(InterfaceMember? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return AbiName == other.AbiName;
+    }
 }
 
 public enum InterfaceMemberType
