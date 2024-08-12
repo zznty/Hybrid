@@ -116,7 +116,7 @@ public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo
             {
                 for (var i = 0; i < entriesCount; i++)
                 {
-                    if (Utf16StringEquals(namePtr, entriesPtr[i].MemberName))
+                    if (Utf16StringEquals((char*)namePtr, (char*)entriesPtr[i].MemberName))
                     {
                         pMemId[namesIndex] = ComputeMemId(i);
                         success = true;
@@ -143,7 +143,7 @@ public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo
         return (ushort)index + 1 | TypeOffset << 16;
     }
 
-    private static unsafe bool Utf16StringEquals(ushort* aPtr, ushort* bPtr)
+    private static unsafe bool Utf16StringEquals(char* aPtr, char* bPtr)
     {
         if (aPtr == bPtr)
             return true;
@@ -154,7 +154,8 @@ public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo
         {
             if (*bPtr++ == 0)
                 return false;
-            if (*aPtr != *bPtr)
+            
+            if (char.ToLowerInvariant(*aPtr) != char.ToLowerInvariant(*bPtr))
                 return false;
         }
         
