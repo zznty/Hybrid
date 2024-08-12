@@ -70,9 +70,27 @@ public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo
         throw new NotImplementedException();
     }
 
-    public void GetNames(int memid, string[] rgBstrNames, int cMaxNames, out int pcNames)
+    public unsafe void GetNames(int memid, string[] rgBstrNames, int cMaxNames, out int pcNames)
     {
-        throw new NotImplementedException();
+        if (memid >> 16 < TypeOffset)
+        {
+            if (baseTypeInfo is null)
+                throw new ArgumentException(null, nameof(memid));
+
+            baseTypeInfo.GetNames(memid, rgBstrNames, cMaxNames, out pcNames);
+            return;
+        }
+        
+        var typeHandle = HybridTypeLib.Global.ResolveTypeHandleFromIid(iid);
+        var entries = IComInterfaceDispatchDetails.GetComInterfaceDispatchDetailsFromTypeHandle(typeHandle, out var entriesCount);
+        
+        var index = (memid & 0xffff) - 1;
+        if (index >= entriesCount) throw new ArgumentException(null, nameof(memid));
+        
+        if (cMaxNames < 1) throw new ArgumentException(null, nameof(cMaxNames));
+        
+        rgBstrNames[0] = Utf16StringMarshaller.ConvertToManaged(entries[index].MemberName)!;
+        pcNames = 1;
     }
 
     public void GetRefTypeOfImplType(int index, out nint href)
