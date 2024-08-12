@@ -1,7 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using Hybrid.Com.Dispatch;
+using BindingFlags = System.Reflection.BindingFlags;
 
 namespace Hybrid.Com.TypeLib;
 
@@ -21,7 +23,9 @@ public partial class HybridTypeLib : ITypeLib
 
     public RuntimeTypeHandle ResolveTypeHandleFromIid(Guid iid) => _typeMap[iid].Handle;
     
-    public unsafe void RegisterComInterface<TInterface, TCoClass>() where TCoClass : class, TInterface
+    public unsafe void RegisterComInterface<TInterface,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TCoClass>()
+        where TCoClass : class, TInterface
     {
         if (StrategyBasedComWrappers.DefaultIUnknownInterfaceDetailsStrategy.GetIUnknownDerivedDetails(typeof(TInterface).TypeHandle) is not { } typeDetails)
             throw new NotSupportedException($"Cannot resolve COM type details for {typeof(TInterface)}");
@@ -34,6 +38,11 @@ public partial class HybridTypeLib : ITypeLib
         var entriesPtr = classTypeDetails.GetComInterfaceEntries(out var entryCount);
         var entries = new ReadOnlySpan<ComWrappers.ComInterfaceEntry>(entriesPtr, entryCount);
 
+        var hasPublicCtor = typeof(TCoClass).GetConstructor(BindingFlags.Public, []) is not null;
+        Func<object>? instanceFactory = null;
+        if (hasPublicCtor)
+            instanceFactory = Activator.CreateInstance<TCoClass>;
+
         for (var i = 0; i < entries.Length; i++)
         {
             var entry = entries[i];
@@ -42,7 +51,7 @@ public partial class HybridTypeLib : ITypeLib
             
             _indexIidMap.Add(entry.IID);
             _typeMap.Add(entry.IID,
-                (new TypeInfo(entry.IID, _indexIidMap.Count, i == 0 ? null : _typeMap[entries[i - 1].IID].Info), TYPEKIND.TKIND_INTERFACE, typeof(TInterface).TypeHandle));
+                (new TypeInfo(entry.IID, _indexIidMap.Count, i == 0 ? null : _typeMap[entries[i - 1].IID].Info, instanceFactory), TYPEKIND.TKIND_DISPATCH, typeof(TInterface).TypeHandle));
         }
     }
     

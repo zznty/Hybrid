@@ -6,21 +6,40 @@ using Hybrid.Com.Dispatch;
 using DISPPARAMS = Hybrid.Com.Dispatch.DISPPARAMS;
 using EXCEPINFO = Hybrid.Com.Dispatch.EXCEPINFO;
 using FUNCDESC = Hybrid.Com.Dispatch.FUNCDESC;
+using FUNCKIND = Hybrid.Com.Dispatch.FUNCKIND;
 using ITypeComp = Hybrid.Com.Dispatch.ITypeComp;
 using ITypeInfo = Hybrid.Com.Dispatch.ITypeInfo;
 using ITypeLib = Hybrid.Com.Dispatch.ITypeLib;
 using TYPEATTR = Hybrid.Com.Dispatch.TYPEATTR;
+using TYPEFLAGS = Hybrid.Com.Dispatch.TYPEFLAGS;
+using TYPEKIND = Hybrid.Com.Dispatch.TYPEKIND;
 using VARDESC = Hybrid.Com.Dispatch.VARDESC;
 
 namespace Hybrid.Com.TypeLib;
 
 [GeneratedComClass]
-public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo) : ITypeInfo
+public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo, Func<object>? instanceFactory) : ITypeInfo
 {
     private ushort TypeOffset => (ushort)(1 + baseTypeInfo?.TypeOffset ?? 0); 
     public unsafe TYPEATTR* GetTypeAttr()
     {
-        throw new NotImplementedException();
+        var attr = (TYPEATTR*)Marshal.AllocCoTaskMem(sizeof(TYPEATTR));
+        
+        var typeHandle = HybridTypeLib.Global.ResolveTypeHandleFromIid(iid);
+        IComInterfaceDispatchDetails.GetComInterfaceDispatchDetailsFromTypeHandle(typeHandle, out var entriesCount);
+        
+        attr->guid = iid;
+        attr->lcid = 1024;
+        attr->cbSizeInstance = sizeof(nint);
+        attr->typekind = TYPEKIND.TKIND_DISPATCH;
+        attr->cImplTypes = (short)TypeOffset;
+        attr->cFuncs = (short)entriesCount;
+        attr->wTypeFlags = TYPEFLAGS.TYPEFLAG_FNONEXTENSIBLE | TYPEFLAGS.TYPEFLAG_FDISPATCHABLE;
+        
+        if (instanceFactory is not null) 
+            attr->wTypeFlags |= TYPEFLAGS.TYPEFLAG_FCANCREATE;
+        
+        return attr;
     }
 
     public ITypeComp GetTypeComp()
@@ -30,7 +49,20 @@ public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo
 
     public unsafe FUNCDESC* GetFuncDesc(int index)
     {
-        throw new NotImplementedException();
+        var desc = (FUNCDESC*)Marshal.AllocCoTaskMem(sizeof(FUNCDESC));
+        
+        var typeHandle = HybridTypeLib.Global.ResolveTypeHandleFromIid(iid);
+        var entries = IComInterfaceDispatchDetails.GetComInterfaceDispatchDetailsFromTypeHandle(typeHandle, out var entriesCount);
+        if (index >= entriesCount) throw new IndexOutOfRangeException();
+
+        var entry = entries[index];
+
+        desc->memid = ComputeMemId(index);
+        desc->cParams = (short)(entries->ParameterCount - 1); // minus return type (passed as first parameter)
+        desc->funckind = FUNCKIND.FUNC_DISPATCH;
+        desc->invkind = entry.Flags;
+        
+        return desc;
     }
 
     public unsafe VARDESC* GetVarDesc(int index)
@@ -68,7 +100,7 @@ public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo
                 {
                     if (Utf16StringEquals(namePtr, entriesPtr[i].MemberName))
                     {
-                        pMemId[namesIndex] = (ushort)i + 1 | TypeOffset << 16;
+                        pMemId[namesIndex] = ComputeMemId(i);
                         success = true;
                         break;
                     }
@@ -86,6 +118,11 @@ public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo
             
             baseTypeInfo.GetIDsOfNames(rgszNames, cNames, pMemId);
         }
+    }
+
+    private int ComputeMemId(int index)
+    {
+        return (ushort)index + 1 | TypeOffset << 16;
     }
 
     private static unsafe bool Utf16StringEquals(ushort* aPtr, ushort* bPtr)
@@ -163,9 +200,19 @@ public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo
         throw new NotImplementedException();
     }
 
-    public nint CreateInstance(nint pUnkOuter, in Guid riid)
+    public unsafe nint CreateInstance(nint pUnkOuter, in Guid riid)
     {
-        throw new NotImplementedException();
+        if (instanceFactory is null) 
+            throw new NotSupportedException("This Type does not support CreateInstance.");
+        
+        var instance = instanceFactory();
+        var instancePtr = (nint)ComInterfaceMarshaller<object>.ConvertToUnmanaged(instance);
+
+        var riidRef = riid;
+        var hr = Marshal.QueryInterface(instancePtr, ref riidRef, out var result);
+        Marshal.ThrowExceptionForHR(hr);
+
+        return result;
     }
 
     public string? GetMops(int memid)
