@@ -27,6 +27,12 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <Targets>Build;DebugSymbolsProjectOutputGroup</Targets>
         </ProjectReference>
+        <ProjectReference Include="..\Libs\DynCall\dyncall\dyncall.vcxproj">
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+            <OutputItemType>Content</OutputItemType>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Targets>Build;DebugSymbolsProjectOutputGroup</Targets>
+        </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>

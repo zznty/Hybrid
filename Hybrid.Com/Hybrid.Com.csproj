@@ -12,4 +12,12 @@
         <ProjectReference Include="..\Hybrid.Com.SourceGenerator\Hybrid.Com.SourceGenerator.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include="..\Libs\DynCall\dyncall\$(Configuration)\dyncall.dll">
+            <Visible>false</Visible>
+            <Pack>true</Pack>
+            <PackagePath>runtimes/win-x64/native/%(FileName)%(Extension)</PackagePath>
+        </Content>
+    </ItemGroup>
+
 </Project>

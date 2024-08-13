@@ -41,6 +41,17 @@ add_library(dyncall_s STATIC ${ASM_SRC}
   dyncall_callf.c
 )
 
+add_library(dyncall SHARED ${ASM_SRC} 
+  dyncall_vector.c 
+  dyncall_aggregate.c 
+  dyncall_api.c 
+  dyncall_callvm.c 
+  dyncall_callvm_base.c
+  dyncall_callf.c
+)
+
+target_compile_definitions(dyncall PRIVATE DC_SHARED)
+
 install(TARGETS dyncall_s ARCHIVE DESTINATION lib )
 
 install(FILES 

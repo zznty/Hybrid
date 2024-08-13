@@ -179,21 +179,33 @@ public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo
         if (entriesPtr->Flags != wFlags)
             throw new TargetParameterCountException();
 
-        var funcPtr = StrategyBasedComWrappers.DefaultIUnknownInterfaceDetailsStrategy.GetIUnknownDerivedDetails(typeHandle)!
+        var funcPtr = (nint)StrategyBasedComWrappers.DefaultIUnknownInterfaceDetailsStrategy.GetIUnknownDerivedDetails(typeHandle)!
                 .ManagedVirtualMethodTable[index];
 
-        var hr = DispatchMember(pvInstance, funcPtr, entriesPtr->Parameters, entriesPtr->ParameterCount, ref pDispParams, pVarResult);
+        ref var varResult = ref *(PropVariant*)pVarResult;
 
-        if (hr < 0 && ComMarshalSupport.LastException.Value is { } lastException)
+        int hr;
+        try
         {
-            ComMarshalSupport.LastException.Value = null;
-            
-            ref var exceptionInfo = ref *(EXCEPINFO*)pExcepInfo;
-            exceptionInfo.bstrSource = Marshal.StringToBSTR(lastException.Source);
-            exceptionInfo.bstrDescription = Marshal.StringToBSTR(lastException.Message);
-            exceptionInfo.bstrHelpFile = Marshal.StringToBSTR(lastException.HelpLink);
-            exceptionInfo.scode = lastException.HResult;
+            hr = DynamicDispatcher.Dispatch(pvInstance, funcPtr,
+                new ReadOnlySpan<DispatchParameterDetails>(entriesPtr->Parameters, entriesPtr->ParameterCount),
+                ref pDispParams, ref varResult);
         }
+        catch (Exception e)
+        {
+            ComMarshalSupport.LastException.Value = e;
+            hr = e.HResult;
+        }
+
+        if (hr == 0 || ComMarshalSupport.LastException.Value is not { } lastException) return hr;
+        
+        ComMarshalSupport.LastException.Value = null;
+            
+        ref var exceptionInfo = ref *(EXCEPINFO*)pExcepInfo;
+        exceptionInfo.bstrSource = Marshal.StringToBSTR(lastException.Source);
+        exceptionInfo.bstrDescription = Marshal.StringToBSTR(lastException.Message);
+        exceptionInfo.bstrHelpFile = Marshal.StringToBSTR(lastException.HelpLink);
+        exceptionInfo.scode = lastException.HResult;
 
         return hr;
     }
@@ -259,7 +271,4 @@ public partial class TypeInfo(Guid iid, int typeLibIndex, TypeInfo? baseTypeInfo
     {
         Marshal.FreeCoTaskMem((nint)pVarDesc);
     }
-    
-    [LibraryImport("Hybrid.WebView2.Native")]
-    private static unsafe partial int DispatchMember(nint instance, void* member, DispatchParameterDetails* details, int cDetails, ref DISPPARAMS dispParams, nint result);
 }

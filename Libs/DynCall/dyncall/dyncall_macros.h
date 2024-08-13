@@ -317,7 +317,11 @@ DC__Arch_SuperH
 /* -- Internal macro/tag -------------------------------------------- */
 
 #if !defined(DC_API)
+#if defined(DC_SHARED)
+# define DC_API __declspec(dllexport)
+#else
 # define DC_API
+#endif
 #endif
 
 
