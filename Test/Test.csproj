@@ -2,8 +2,8 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0-windows</TargetFramework>
-        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <TargetFrameworks>net8.0;net8.0-windows</TargetFrameworks>
+        <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PublishAot>true</PublishAot>
@@ -12,31 +12,39 @@
         <NoWarn>SYSLIB1097</NoWarn>
         <IsPackable>false</IsPackable>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <Configurations>Debug;Release;LinuxDebug;LinuxRelease</Configurations>
+        <Platforms>x64</Platforms>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <RuntimeIdentifier Condition=" '$(TargetFramework)' == 'net8.0-windows' ">win-x64</RuntimeIdentifier>
+        <RuntimeIdentifier Condition=" '$(TargetFramework)' == 'net8.0' ">linux-x64</RuntimeIdentifier>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Hybrid.WebView2\Hybrid.WebView2.csproj"/>
-        <ProjectReference Include="..\Hybrid\Hybrid.csproj"/>
+        <ProjectReference Include="..\Hybrid.Com\Hybrid.Com.csproj"/>
         <ProjectReference Include="..\Hybrid.Com.SourceGenerator\Hybrid.Com.SourceGenerator.csproj">
             <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
             <OutputItemType>Analyzer</OutputItemType>
         </ProjectReference>
-        <ProjectReference Include="..\Hybrid.WebView2.Native\Hybrid.WebView2.Native.vcxproj">
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-            <OutputItemType>Content</OutputItemType>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <Targets>Build;DebugSymbolsProjectOutputGroup</Targets>
-        </ProjectReference>
-        <ProjectReference Include="..\Libs\DynCall\dyncall\dyncall.vcxproj">
+        <ProjectReference Include="..\DynCall\DynCall.vcxproj">
             <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
             <OutputItemType>Content</OutputItemType>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <Targets>Build;DebugSymbolsProjectOutputGroup</Targets>
         </ProjectReference>
     </ItemGroup>
+    
+    <ItemGroup Condition=" '$(TargetFramework)' != 'net8.0-windows' ">
+        <ProjectReference Include="..\Hybrid.WebKitGtk\Hybrid.WebKitGtk.csproj"/>
+    </ItemGroup>
+    
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0-windows' ">
+        <ProjectReference Include="..\Hybrid.WebView2\Hybrid.WebView2.csproj"/>
+    </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Silk.NET.Windowing.Glfw" Version="2.21.0" />
+      <PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.21.0" />
     </ItemGroup>
 
 </Project>

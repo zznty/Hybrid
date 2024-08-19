@@ -2,7 +2,13 @@
   "profiles": {
     "Test": {
       "commandName": "Project",
-      "nativeDebugging": true
+      "nativeDebugging": true,
+      "environmentVariables": {
+          "DOTNET_DbgEnableMiniDump": "0",
+          "DOTNET_DbgMiniDumpType": "4",
+          "DOTNET_CreateDumpDiagnostics": "1",
+          "GDK_DEBUG": "x11"
+      }
     }
   }
 }

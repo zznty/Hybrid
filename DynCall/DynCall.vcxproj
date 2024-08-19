@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectCapability Include="PackageReferences" />
+    <ProjectConfiguration Include="LinuxDebug|x64">
+      <Configuration>LinuxDebug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="LinuxRelease|x64">
+      <Configuration>LinuxRelease</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCTargetsPath Condition="'$(DesignTimeBuild)'!='true' AND $(Configuration.Contains('Emscripten'))">./</VCTargetsPath>
+    <MSBuildProjectExtensionsPath Condition="'$(DesignTimeBuild)'!='true' AND $(Configuration.Contains('Emscripten'))">./</MSBuildProjectExtensionsPath>
+    <GCCBuild_UseWSL>false</GCCBuild_UseWSL>
+    <GCCToolCompilerStyle Condition="$(Configuration.Contains('Emscripten'))">llvm</GCCToolCompilerStyle>
+    <VCTargetsPath Condition="'$(DesignTimeBuild)'!='true' AND $(Configuration.Contains('GCC'))">./</VCTargetsPath>
+    <MSBuildProjectExtensionsPath Condition="'$(DesignTimeBuild)'!='true' AND $(Configuration.Contains('GCC'))">./</MSBuildProjectExtensionsPath>
+    <VCTargetsPath Condition="'$(DesignTimeBuild)'!='true' AND $(Configuration.Contains('Linux'))">./</VCTargetsPath>
+    <MSBuildProjectExtensionsPath Condition="'$(DesignTimeBuild)'!='true' AND $(Configuration.Contains('Linux'))">./</MSBuildProjectExtensionsPath>
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{1324BC8C-3724-4945-B160-8B1F55BFF3F8}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace />
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <PropertyGroup Label="NuGet">
+    <!-- https://github.com/NuGet/Home/issues/10511#issuecomment-778400668 -->
+    <AssetTargetFallback>$(AssetTargetFallback);native</AssetTargetFallback>
+    <!--
+          Avoid Visual Studio error message:
+          "The project '$(MSBuildProjectName)' ran into a problem during the last operation: The value of the
+          'TargetFrameworkMoniker' and 'NuGetTargetMoniker' properties in the '$(Configuration)|$(Platform)' configuration are both
+          empty. This configuration will not contribute to NuGet restore, which may result in restore and build errors. You may
+          need to reload the solution after fixing the problem."
+        -->
+    <TargetFrameworkVersion>v0.0</TargetFrameworkVersion>
+    <TargetFramework>native</TargetFramework>
+    <TargetFrameworkIdentifier>native</TargetFrameworkIdentifier>
+    <TargetFrameworkMoniker Condition="'$(NuGetTargetMoniker)' == ''">native,Version=v0.0</TargetFrameworkMoniker>
+    <RuntimeIdentifiers Condition="'$(RuntimeIdentifiers)' == ''">win;win-x86;win-x64;win-arm;win-arm64</RuntimeIdentifiers>
+    <UseTargetPlatformAsNuGetTargetMoniker>false</UseTargetPlatformAsNuGetTargetMoniker>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='LinuxDebug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='LinuxRelease|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" Condition="'$(VCTargetsPath)' != '.' AND '$(VCTargetsPath)' != '.\' AND '$(VCTargetsPath)' != './'" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" Condition=" '$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release' " />
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='LinuxDebug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='LinuxRelease|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros">
+  </PropertyGroup>
+  <PropertyGroup>
+    <LinkIncremental Condition=" '$(Configuration)'=='Debug' Or '$(Configuration)'=='LinuxDebug' ">true</LinkIncremental>
+    <BaseOutputPath Condition=" '$(BaseOutputPath)' == '' ">bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
+    <OutputPath>$(BaseOutputPath)\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <IntDir Condition=" '$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release' ">$(IntermediateOutputPath)</IntDir>
+    <OutDir>$(OutputPath)</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;DYNAMICLIB_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='LinuxDebug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>Unix;Linux;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;DYNAMICLIB_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='LinuxRelease|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>Unix;Linux;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <PackageReference Include="GCCBuildTargets" Version="2.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dyncall.h" />
+    <ClInclude Include="dyncall_aggregate.h" />
+    <ClInclude Include="dyncall_alloc.h" />
+    <ClInclude Include="dyncall_callf.h" />
+    <ClInclude Include="dyncall_callvm.h" />
+    <ClInclude Include="dyncall_callvm_arm32_arm.h" />
+    <ClInclude Include="dyncall_callvm_arm32_arm_armhf.h" />
+    <ClInclude Include="dyncall_callvm_arm32_thumb.h" />
+    <ClInclude Include="dyncall_callvm_arm64.h" />
+    <ClInclude Include="dyncall_callvm_mips.h" />
+    <ClInclude Include="dyncall_callvm_mips_eabi.h" />
+    <ClInclude Include="dyncall_callvm_mips_n32.h" />
+    <ClInclude Include="dyncall_callvm_mips_n64.h" />
+    <ClInclude Include="dyncall_callvm_mips_o32.h" />
+    <ClInclude Include="dyncall_callvm_ppc32.h" />
+    <ClInclude Include="dyncall_callvm_ppc64.h" />
+    <ClInclude Include="dyncall_callvm_sparc.h" />
+    <ClInclude Include="dyncall_callvm_sparc64.h" />
+    <ClInclude Include="dyncall_callvm_x64.h" />
+    <ClInclude Include="dyncall_callvm_x86.h" />
+    <ClInclude Include="dyncall_config.h" />
+    <ClInclude Include="dyncall_macros.h" />
+    <ClInclude Include="dyncall_signature.h" />
+    <ClInclude Include="dyncall_types.h" />
+    <ClInclude Include="dyncall_utils.h" />
+    <ClInclude Include="dyncall_value.h" />
+    <ClInclude Include="dyncall_vector.h" />
+    <ClInclude Include="dyncall_version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dyncall_vector.c" />
+    <ClCompile Include="dyncall_aggregate.c" />
+    <ClCompile Include="dyncall_api.c" />
+    <ClCompile Include="dyncall_callvm.c" />
+    <ClCompile Include="dyncall_callvm_base.c" />
+    <ClCompile Include="dyncall_callf.c" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' Or '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <MASM Include="dyncall_call_x64_generic_masm.asm" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'LinuxDebug' Or '$(Configuration)' == 'LinuxRelease' ">
+    <GCCAsm Include="dyncall_call.S" />
+  </ItemGroup>
+  <Target Name="GCCCompileAsm" BeforeTargets="Build" Condition=" '$(Configuration)' == 'LinuxDebug' Or '$(Configuration)' == 'LinuxRelease' ">
+    <Message Text="Assembling @(GCCAsm)" Importance="High" />
+    <Exec Command="mkdir -p $(IntDir)" />
+    <Exec Command="$(GCCToolCompilerExe) -c %(GCCAsm.FullPath) -o $(IntDir)%(RecursiveDir)%(Filename).o" />
+  </Target>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" Condition=" '$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release' " />
+  </ImportGroup>
+</Project>

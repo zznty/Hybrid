@@ -140,9 +140,9 @@ public class DynamicCallVm : SafeHandle
     // todo support varargs
 }
 
-file static partial class PInvoke
+file static class PInvoke
 {
-    private const string DllName = "dyncall";
+    private const string DllName = "DynCall";
     
     [DllImport(DllName, EntryPoint = "dcNewCallVM")]
     public static extern nint NewVm(nint size);

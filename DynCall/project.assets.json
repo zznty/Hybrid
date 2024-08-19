@@ -1,0 +1,142 @@
+{
+  "version": 3,
+  "targets": {
+    "native,Version=v0.0": {
+      "GCCBuildTargets/2.24.163.4": {
+        "type": "package",
+        "build": {
+          "build/GCCBuildTargets.targets": {}
+        }
+      }
+    },
+    "native,Version=v0.0/win": {
+      "GCCBuildTargets/2.24.163.4": {
+        "type": "package",
+        "build": {
+          "build/GCCBuildTargets.targets": {}
+        }
+      }
+    },
+    "native,Version=v0.0/win-arm": {
+      "GCCBuildTargets/2.24.163.4": {
+        "type": "package",
+        "build": {
+          "build/GCCBuildTargets.targets": {}
+        }
+      }
+    },
+    "native,Version=v0.0/win-arm64": {
+      "GCCBuildTargets/2.24.163.4": {
+        "type": "package",
+        "build": {
+          "build/GCCBuildTargets.targets": {}
+        }
+      }
+    },
+    "native,Version=v0.0/win-x64": {
+      "GCCBuildTargets/2.24.163.4": {
+        "type": "package",
+        "build": {
+          "build/GCCBuildTargets.targets": {}
+        }
+      }
+    },
+    "native,Version=v0.0/win-x86": {
+      "GCCBuildTargets/2.24.163.4": {
+        "type": "package",
+        "build": {
+          "build/GCCBuildTargets.targets": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "GCCBuildTargets/2.24.163.4": {
+      "sha512": "3QvqIDr2uBvmp9ySaPsxYvQjY1NlUOQhebPNec9o/uywy2Oi2drFDNpzV4bprLpoLvSGCCRa8nhEKZKv7tn4iw==",
+      "type": "package",
+      "path": "gccbuildtargets/2.24.163.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build/DebuggerSupport.targets",
+        "build/GCCBuild.CppClean.targets",
+        "build/GCCBuildTargets.targets",
+        "build/Microsoft.Cpp.props",
+        "build/Microsoft.Cpp.targets",
+        "gccbuildtargets.2.24.163.4.nupkg.sha512",
+        "gccbuildtargets.nuspec",
+        "lib/netstandard2.0/GCCBuild.dll",
+        "lib/netstandard2.0/GCCBuild.pdb",
+        "lib/netstandard2.0/Microsoft.Build.Framework.dll",
+        "lib/netstandard2.0/Microsoft.Build.Utilities.Core.dll"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    "native,Version=v0.0": [
+      "GCCBuildTargets >= 2.*"
+    ]
+  },
+  "packageFolders": {
+    "/home/zznty/.nuget/packages/": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "/mnt/c/Users/zznty/projects/Hybrid/DynCall/DynCall.vcxproj",
+      "projectName": "DynCall",
+      "projectPath": "/mnt/c/Users/zznty/projects/Hybrid/DynCall/DynCall.vcxproj",
+      "packagesPath": "/home/zznty/.nuget/packages/",
+      "outputPath": "/mnt/c/Users/zznty/projects/Hybrid/DynCall/",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "/home/zznty/.nuget/NuGet/NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "native"
+      ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "native": {
+          "targetAlias": "native",
+          "projectReferences": {}
+        }
+      }
+    },
+    "frameworks": {
+      "native": {
+        "targetAlias": "native",
+        "dependencies": {
+          "GCCBuildTargets": {
+            "target": "Package",
+            "version": "[2.*, )"
+          }
+        },
+        "imports": [
+          "native"
+        ],
+        "assetTargetFallback": true,
+        "warn": true
+      }
+    },
+    "runtimes": {
+      "win": {
+        "#import": []
+      },
+      "win-arm": {
+        "#import": []
+      },
+      "win-arm64": {
+        "#import": []
+      },
+      "win-x64": {
+        "#import": []
+      },
+      "win-x86": {
+        "#import": []
+      }
+    }
+  }
+}

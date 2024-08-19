@@ -4,8 +4,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hybrid", "Hybrid\Hybrid.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hybrid.WebView2", "Hybrid.WebView2\Hybrid.WebView2.csproj", "{AEA04CD1-D858-4081-B89A-5539D85EF682}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hybrid.WebView2.Native", "Hybrid.WebView2.Native\Hybrid.WebView2.Native.vcxproj", "{C1FA6517-3EF7-44F3-BD76-C67143AD789D}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{D2F5DE5C-49E0-4822-9E18-66D04B563E4B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{96EDF39F-55C6-4F84-A99E-2A393A434D33}"
@@ -14,36 +12,76 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hybrid.Com.SourceGenerator"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hybrid.Com", "Hybrid.Com\Hybrid.Com.csproj", "{7067669D-E469-4913-B003-C877D055E785}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hybrid.WebCore", "Hybrid.WebCore\Hybrid.WebCore.csproj", "{997B4C0E-257A-4B24-ADC4-A8BD06F64294}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hybrid.WebKitGtk", "Hybrid.WebKitGtk\Hybrid.WebKitGtk.csproj", "{89839F70-D645-4BEE-A4A2-94505A75ED97}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynCall", "DynCall\DynCall.vcxproj", "{1324BC8C-3724-4945-B160-8B1F55BFF3F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
+		LinuxRelease|x64 = LinuxRelease|x64
+		LinuxDebug|x64 = LinuxDebug|x64
+		Release|x64 = Release|x64
+		Debug|x64 = Debug|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A059089B-A022-4FA8-AB18-AB6D59722A53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A059089B-A022-4FA8-AB18-AB6D59722A53}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A059089B-A022-4FA8-AB18-AB6D59722A53}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A059089B-A022-4FA8-AB18-AB6D59722A53}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AEA04CD1-D858-4081-B89A-5539D85EF682}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AEA04CD1-D858-4081-B89A-5539D85EF682}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AEA04CD1-D858-4081-B89A-5539D85EF682}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AEA04CD1-D858-4081-B89A-5539D85EF682}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C1FA6517-3EF7-44F3-BD76-C67143AD789D}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{C1FA6517-3EF7-44F3-BD76-C67143AD789D}.Debug|Any CPU.Build.0 = Debug|x64
-		{C1FA6517-3EF7-44F3-BD76-C67143AD789D}.Release|Any CPU.ActiveCfg = Release|x64
-		{C1FA6517-3EF7-44F3-BD76-C67143AD789D}.Release|Any CPU.Build.0 = Release|x64
-		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7067669D-E469-4913-B003-C877D055E785}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7067669D-E469-4913-B003-C877D055E785}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7067669D-E469-4913-B003-C877D055E785}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7067669D-E469-4913-B003-C877D055E785}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1324BC8C-3724-4945-B160-8B1F55BFF3F8}.LinuxRelease|x64.ActiveCfg = LinuxRelease|x64
+		{1324BC8C-3724-4945-B160-8B1F55BFF3F8}.LinuxRelease|x64.Build.0 = LinuxRelease|x64
+		{1324BC8C-3724-4945-B160-8B1F55BFF3F8}.LinuxDebug|x64.ActiveCfg = LinuxDebug|x64
+		{1324BC8C-3724-4945-B160-8B1F55BFF3F8}.LinuxDebug|x64.Build.0 = LinuxDebug|x64
+		{1324BC8C-3724-4945-B160-8B1F55BFF3F8}.Release|x64.ActiveCfg = Release|x64
+		{1324BC8C-3724-4945-B160-8B1F55BFF3F8}.Release|x64.Build.0 = Release|x64
+		{1324BC8C-3724-4945-B160-8B1F55BFF3F8}.Debug|x64.ActiveCfg = Debug|x64
+		{1324BC8C-3724-4945-B160-8B1F55BFF3F8}.Debug|x64.Build.0 = Debug|x64
+		{A059089B-A022-4FA8-AB18-AB6D59722A53}.LinuxRelease|x64.ActiveCfg = LinuxRelease|x64
+		{A059089B-A022-4FA8-AB18-AB6D59722A53}.LinuxRelease|x64.Build.0 = LinuxRelease|x64
+		{A059089B-A022-4FA8-AB18-AB6D59722A53}.LinuxDebug|x64.ActiveCfg = LinuxDebug|x64
+		{A059089B-A022-4FA8-AB18-AB6D59722A53}.LinuxDebug|x64.Build.0 = LinuxDebug|x64
+		{A059089B-A022-4FA8-AB18-AB6D59722A53}.Release|x64.ActiveCfg = Release|x64
+		{A059089B-A022-4FA8-AB18-AB6D59722A53}.Release|x64.Build.0 = Release|x64
+		{A059089B-A022-4FA8-AB18-AB6D59722A53}.Debug|x64.ActiveCfg = Debug|x64
+		{A059089B-A022-4FA8-AB18-AB6D59722A53}.Debug|x64.Build.0 = Debug|x64
+		{7067669D-E469-4913-B003-C877D055E785}.LinuxRelease|x64.ActiveCfg = LinuxRelease|x64
+		{7067669D-E469-4913-B003-C877D055E785}.LinuxRelease|x64.Build.0 = LinuxRelease|x64
+		{7067669D-E469-4913-B003-C877D055E785}.LinuxDebug|x64.ActiveCfg = LinuxDebug|x64
+		{7067669D-E469-4913-B003-C877D055E785}.LinuxDebug|x64.Build.0 = LinuxDebug|x64
+		{7067669D-E469-4913-B003-C877D055E785}.Release|x64.ActiveCfg = Release|x64
+		{7067669D-E469-4913-B003-C877D055E785}.Release|x64.Build.0 = Release|x64
+		{7067669D-E469-4913-B003-C877D055E785}.Debug|x64.ActiveCfg = Debug|x64
+		{7067669D-E469-4913-B003-C877D055E785}.Debug|x64.Build.0 = Debug|x64
+		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.LinuxRelease|x64.ActiveCfg = LinuxRelease|x64
+		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.LinuxRelease|x64.Build.0 = LinuxRelease|x64
+		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.LinuxDebug|x64.ActiveCfg = LinuxDebug|x64
+		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.LinuxDebug|x64.Build.0 = LinuxDebug|x64
+		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.Release|x64.ActiveCfg = Release|x64
+		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.Release|x64.Build.0 = Release|x64
+		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.Debug|x64.ActiveCfg = Debug|x64
+		{2513833A-691B-4B80-BDE6-44EA9F6AF029}.Debug|x64.Build.0 = Debug|x64
+		{997B4C0E-257A-4B24-ADC4-A8BD06F64294}.LinuxRelease|x64.ActiveCfg = LinuxRelease|x64
+		{997B4C0E-257A-4B24-ADC4-A8BD06F64294}.LinuxRelease|x64.Build.0 = LinuxRelease|x64
+		{997B4C0E-257A-4B24-ADC4-A8BD06F64294}.LinuxDebug|x64.ActiveCfg = LinuxDebug|x64
+		{997B4C0E-257A-4B24-ADC4-A8BD06F64294}.LinuxDebug|x64.Build.0 = LinuxDebug|x64
+		{997B4C0E-257A-4B24-ADC4-A8BD06F64294}.Release|x64.ActiveCfg = Release|x64
+		{997B4C0E-257A-4B24-ADC4-A8BD06F64294}.Release|x64.Build.0 = Release|x64
+		{997B4C0E-257A-4B24-ADC4-A8BD06F64294}.Debug|x64.ActiveCfg = Debug|x64
+		{997B4C0E-257A-4B24-ADC4-A8BD06F64294}.Debug|x64.Build.0 = Debug|x64
+		{89839F70-D645-4BEE-A4A2-94505A75ED97}.LinuxRelease|x64.ActiveCfg = LinuxRelease|x64
+		{89839F70-D645-4BEE-A4A2-94505A75ED97}.LinuxRelease|x64.Build.0 = LinuxRelease|x64
+		{89839F70-D645-4BEE-A4A2-94505A75ED97}.LinuxDebug|x64.ActiveCfg = LinuxDebug|x64
+		{89839F70-D645-4BEE-A4A2-94505A75ED97}.LinuxDebug|x64.Build.0 = LinuxDebug|x64
+		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.LinuxRelease|x64.ActiveCfg = LinuxRelease|x64
+		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.LinuxRelease|x64.Build.0 = LinuxRelease|x64
+		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.LinuxDebug|x64.ActiveCfg = LinuxDebug|x64
+		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.LinuxDebug|x64.Build.0 = LinuxDebug|x64
+		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.Release|x64.ActiveCfg = Release|x64
+		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.Release|x64.Build.0 = Release|x64
+		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.Debug|x64.ActiveCfg = Debug|x64
+		{96EDF39F-55C6-4F84-A99E-2A393A434D33}.Debug|x64.Build.0 = Debug|x64
+		{AEA04CD1-D858-4081-B89A-5539D85EF682}.Release|x64.ActiveCfg = Release|x64
+		{AEA04CD1-D858-4081-B89A-5539D85EF682}.Release|x64.Build.0 = Release|x64
+		{AEA04CD1-D858-4081-B89A-5539D85EF682}.Debug|x64.ActiveCfg = Debug|x64
+		{AEA04CD1-D858-4081-B89A-5539D85EF682}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{96EDF39F-55C6-4F84-A99E-2A393A434D33} = {D2F5DE5C-49E0-4822-9E18-66D04B563E4B}

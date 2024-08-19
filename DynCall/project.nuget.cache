@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "xJtbCrB8I3ET6qb+5rvInu3EIA5qLSVaqbZYSVuyItOegnHFRihFEQbedVeIyWL536OPK8oU3SUQgvCEdQ6ysg==",
+  "success": true,
+  "projectFilePath": "/mnt/c/Users/zznty/projects/Hybrid/DynCall/DynCall.vcxproj",
+  "expectedPackageFiles": [
+    "/home/zznty/.nuget/packages/gccbuildtargets/2.24.163.4/gccbuildtargets.2.24.163.4.nupkg.sha512"
+  ],
+  "logs": []
+}

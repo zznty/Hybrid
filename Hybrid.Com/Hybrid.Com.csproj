@@ -5,18 +5,26 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Configurations>Debug;Release;LinuxDebug;LinuxRelease</Configurations>
+        <Platforms>x64</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Hybrid\Hybrid.csproj"/>
-        <ProjectReference Include="..\Hybrid.Com.SourceGenerator\Hybrid.Com.SourceGenerator.csproj" />
+        <ProjectReference Include="..\Hybrid.Com.SourceGenerator\Hybrid.Com.SourceGenerator.csproj" Condition="  '$(Configuration)' == 'Release' " />
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="..\Libs\DynCall\dyncall\$(Configuration)\dyncall.dll">
+        <Content Include="..\DynCall\bin\x64\Release\dyncall.dll">
             <Visible>false</Visible>
             <Pack>true</Pack>
             <PackagePath>runtimes/win-x64/native/%(FileName)%(Extension)</PackagePath>
+        </Content>
+
+        <Content Include="..\DynCall\bin\x64\LinuxRelease\libDynCall.so">
+            <Visible>false</Visible>
+            <Pack>true</Pack>
+            <PackagePath>runtimes/linux-x64/native/%(FileName)%(Extension)</PackagePath>
         </Content>
     </ItemGroup>
 

@@ -1,9 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "DebugRoslynSourceGenerator": {
+    "Debug Test": {
       "commandName": "DebugRoslynComponent",
       "targetProject": "../Test/Test.csproj"
+    },
+    "Debug WebView2": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "../Hybrid.WebView2/Hybrid.WebView2.csproj"
     }
   }
 }

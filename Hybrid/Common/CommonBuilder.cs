@@ -1,12 +1,11 @@
-﻿using Hybrid.Common;
-using Hybrid.Hosting;
+﻿using Hybrid.Hosting;
 using Hybrid.Hosting.Abstraction;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Hybrid.WebView2;
+namespace Hybrid.Common;
 
-public class WebView2Builder(IServiceCollection serviceCollection) : IHybridSandboxBuilder
+public class CommonBuilder(IServiceCollection serviceCollection) : IHybridSandboxBuilder
 {
     public IHybridSandboxBuilder AddStartupScript(string script)
     {

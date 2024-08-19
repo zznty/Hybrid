@@ -54,9 +54,11 @@ chrome.webview.hostObjects.calculator.add(1, 2) // returns 3
 - [ ] WebViews
   - [x] WebView2 (Windows only)
   - [ ] WebKit webview (OSX only)
+  - [ ] WebKitGtk (GNOME/linux only)
+  - [ ] maybe CEF (it must have some v8 apis to play with)
   - [ ] Ultralight (Windows/OSX)
 - [ ] COM
-  - [ ] Get rid of cpp wrapper for COM stuff (write ComSourceGenerator-compatible C# interfaces)
+  - [x] Get rid of cpp wrapper for COM stuff (write ComSourceGenerator-compatible C# interfaces)
   - [ ] Get rid of asm dyncalls for OLE Dispatch
   - [ ] Add support for events marshaling
   - [ ] Add support for callbacks marshaling

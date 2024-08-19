@@ -439,6 +439,11 @@ public static partial class ComMarshalSupport
         return safeArrayPtr;
     }
 
+    public static unsafe void DestroySafeArray(SafeArray* safeArray)
+    {
+        Marshal.ThrowExceptionForHR(SafeArrayDestroy(safeArray));
+    }
+
     public static unsafe T?[] FromSafeArray<T>(SafeArray* safeArray)
     {
         var variantArray = new VariantArray(GetVarType(typeof(T)), safeArray);
@@ -466,4 +471,8 @@ public static partial class ComMarshalSupport
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     private static unsafe partial SafeArray* SafeArrayCreate(ushort vt, uint cDims,
         ReadOnlySpan<SafeArrayBounds> rgsabound);
+
+    [LibraryImport("oleaut32.dll")]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static unsafe partial int SafeArrayDestroy(SafeArray* psa);
 }
