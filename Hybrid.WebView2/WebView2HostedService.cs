@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -30,7 +31,7 @@ public partial class WebView2HostedService(
     private IWindow? _window;
     private ICoreWebView2Controller? _controller;
     
-    private nint _origProc;
+    private static nint _origProc;
     
     public Task StopAsync(CancellationToken cancellationToken)
     {
@@ -103,8 +104,12 @@ public partial class WebView2HostedService(
 
             _origProc = PInvoke.GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC);
 
-            PInvoke.SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_WNDPROC,
-                Marshal.GetFunctionPointerForDelegate<WNDPROC>(WindowProc));
+            unsafe
+            {
+                var ptr = (nint)(delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT>)&WindowProc;
+
+                PInvoke.SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_WNDPROC, ptr);
+            }
             
             if (!PInvoke.SetWindowPos(hWnd, HWND.Null, 0, 0, _window!.Size.X, _window.Size.Y,
                     SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED))
@@ -153,7 +158,8 @@ public partial class WebView2HostedService(
         webView.Navigate(hostOptions.Url);
     }
 
-    private unsafe LRESULT WindowProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static unsafe LRESULT WindowProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
     {
         switch (uMsg)
         {
