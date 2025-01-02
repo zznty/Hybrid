@@ -120,6 +120,14 @@ public partial class WebView2HostedService(
                 {
                     var cornerPreference = DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_ROUND;
                     PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPreference, sizeof(int)).ThrowOnFailure();
+                    
+                    var value = 1;
+                    PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_HOSTBACKDROPBRUSH, &value,
+                        sizeof(int)).ThrowOnFailure();
+
+                    var backdropType = DWM_SYSTEMBACKDROP_TYPE.DWMSBT_MAINWINDOW;
+                    PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_SYSTEMBACKDROP_TYPE, &backdropType,
+                        sizeof(DWM_SYSTEMBACKDROP_TYPE)).ThrowOnFailure();
                 }
         }
 
