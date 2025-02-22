@@ -5,7 +5,7 @@ using Silk.NET.Windowing;
 
 namespace Hybrid.Hosting;
 
-internal class HybridHostLifetime(IEnumerable<IHostedService> hostedServices, ILogger<HybridHostLifetime> logger) : IHostLifetime, IHostApplicationLifetime
+internal class HybridHostLifetime(IEnumerable<IHostedService> hostedServices, ILogger<HybridHostLifetime> logger) : IHostLifetime, IHybridApplicationLifetime
 {
     private IWindow? _window;
     private readonly SemaphoreSlim _startSemaphore = new(0);
@@ -82,4 +82,10 @@ internal class HybridHostLifetime(IEnumerable<IHostedService> hostedServices, IL
     public CancellationToken ApplicationStarted => _startedTokenSource.Token;
     public CancellationToken ApplicationStopping => _stoppingTokenSource.Token;
     public CancellationToken ApplicationStopped => _stoppingTokenSource.Token;
+    
+    public void MinimizeApplication()
+    {
+        if (_window is not null) 
+            _window.WindowState = WindowState.Minimized;
+    }
 }
