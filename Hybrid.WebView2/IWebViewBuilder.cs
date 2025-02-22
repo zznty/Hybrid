@@ -21,6 +21,8 @@ public class WebViewBuilder(IServiceCollection serviceCollection) : CommonBuilde
 public class WebViewOptions
 {
     public bool UseCssTitleBar { get; set; } = true;
+
+    public bool UseTransparency { get; set; } = true;
     
     public event Action<ICoreWebView2Settings>? ConfigureWebView;
     

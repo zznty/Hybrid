@@ -11,6 +11,7 @@ using Hybrid.Hosting;
 using Hybrid.Hosting.Abstraction;
 using Hybrid.WebView2.Com;
 using Microsoft.Extensions.Options;
+using Microsoft.Win32;
 using Silk.NET.Windowing;
 
 namespace Hybrid.WebView2;
@@ -30,6 +31,8 @@ public partial class WebView2HostedService(
     private nint _hWnd;
     private IWindow? _window;
     private ICoreWebView2Controller? _controller;
+
+    private static event Action? ImmersiveModeChanged;
     
     private static nint _origProc;
     
@@ -76,60 +79,7 @@ public partial class WebView2HostedService(
 
         var settings = webView.Settings;
 
-        if (settings is ICoreWebView2Settings9 settings9 && options.Value.UseCssTitleBar)
-        {
-            settings9.IsNonClientRegionSupportEnabled = true;
-
-            var hWnd = (HWND)_hWnd;
-            
-            unsafe
-            {
-                var captionColor = 0xFFFFFFFE;
-                PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_CAPTION_COLOR, &captionColor, sizeof(int)).ThrowOnFailure();
-            }
-
-            PInvoke.DwmExtendFrameIntoClientArea(hWnd, new MARGINS
-            {
-                cxLeftWidth = -1,
-                cxRightWidth = -1,
-                cyTopHeight = -1,
-                cyBottomHeight = -1
-            }).ThrowOnFailure();
-
-            var style = PInvoke.GetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
-
-            style &= ~(int)WINDOW_STYLE.WS_SYSMENU;
-
-            PInvoke.SetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, style);
-
-            _origProc = PInvoke.GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC);
-
-            unsafe
-            {
-                var ptr = (nint)(delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT>)&WindowProc;
-
-                PInvoke.SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_WNDPROC, ptr);
-            }
-            
-            if (!PInvoke.SetWindowPos(hWnd, HWND.Null, 0, 0, _window!.Size.X, _window.Size.Y,
-                    SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED))
-                Marshal.ThrowExceptionForHR(Marshal.GetLastWin32Error());
-
-            if (OperatingSystem.IsWindowsVersionAtLeast(10, build: 22000))
-                unsafe
-                {
-                    var cornerPreference = DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_ROUND;
-                    PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPreference, sizeof(int)).ThrowOnFailure();
-                    
-                    var value = 1;
-                    PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_HOSTBACKDROPBRUSH, &value,
-                        sizeof(int)).ThrowOnFailure();
-
-                    var backdropType = DWM_SYSTEMBACKDROP_TYPE.DWMSBT_MAINWINDOW;
-                    PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_SYSTEMBACKDROP_TYPE, &backdropType,
-                        sizeof(DWM_SYSTEMBACKDROP_TYPE)).ThrowOnFailure();
-                }
-        }
+        ConsiderNonClientAreaSupport(settings);
 
         settings.IsStatusBarEnabled = false;
         settings.IsZoomControlEnabled = false;
@@ -164,6 +114,82 @@ public partial class WebView2HostedService(
         };
         
         webView.Navigate(hostOptions.Url);
+    }
+
+    private unsafe void ConsiderNonClientAreaSupport(ICoreWebView2Settings settings)
+    {
+        if (settings is not ICoreWebView2Settings9 settings9 || !options.Value.UseCssTitleBar)
+        {
+            options.Value.UseCssTitleBar = false;
+            return;
+        }
+        
+        settings9.IsNonClientRegionSupportEnabled = true;
+
+        var hWnd = (HWND)_hWnd;
+
+        var captionColor = 0xFFFFFFFE;
+        PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_CAPTION_COLOR, &captionColor, sizeof(int)).ThrowOnFailure();
+
+        PInvoke.DwmExtendFrameIntoClientArea(hWnd, new MARGINS
+        {
+            cxLeftWidth = -1,
+            cxRightWidth = -1,
+            cyTopHeight = -1,
+            cyBottomHeight = -1
+        }).ThrowOnFailure();
+
+        var style = PInvoke.GetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
+
+        style &= ~(int)WINDOW_STYLE.WS_SYSMENU;
+
+        PInvoke.SetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, style);
+
+        _origProc = PInvoke.GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC);
+
+        var ptr = (nint)(delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT>)&WindowProc;
+
+        PInvoke.SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_WNDPROC, ptr);
+
+        if (!PInvoke.SetWindowPos(hWnd, HWND.Null, 0, 0, _window!.Size.X, _window.Size.Y,
+                SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED))
+            Marshal.ThrowExceptionForHR(Marshal.GetLastWin32Error());
+
+        if (!OperatingSystem.IsWindowsVersionAtLeast(10, build: 22000) || !options.Value.UseTransparency)
+        {
+            options.Value.UseTransparency = false;
+            return;
+        }
+
+        var cornerPreference = DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_ROUND;
+        PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPreference,
+            sizeof(int)).ThrowOnFailure();
+
+        var value = 1;
+        PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_HOSTBACKDROPBRUSH, &value,
+            sizeof(int)).ThrowOnFailure();
+        
+        ConsiderImmersiveMode();
+
+        ImmersiveModeChanged += ConsiderImmersiveMode;
+
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, build: 22621))
+        {
+            var backdropType = DWM_SYSTEMBACKDROP_TYPE.DWMSBT_MAINWINDOW;
+            PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_SYSTEMBACKDROP_TYPE, &backdropType,
+                sizeof(DWM_SYSTEMBACKDROP_TYPE)).ThrowOnFailure();
+        }
+    }
+
+    private unsafe void ConsiderImmersiveMode()
+    {
+        var value = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
+            ?.GetValue("AppsUseLightTheme") as int? ?? 0;
+        
+        value = value == 0 ? 1 : 0;
+        
+        PInvoke.DwmSetWindowAttribute((HWND)_hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE, &value,
+            sizeof(int)).ThrowOnFailure();
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
@@ -220,6 +246,15 @@ public partial class WebView2HostedService(
                 {
                     return new((nint)PInvoke.HTRIGHT);
                 }
+                break;
+            }
+            case PInvoke.WM_SETTINGCHANGE:
+            {
+                var str = Marshal.PtrToStringUTF8(lParam.Value);
+                
+                if (str is "ImmersiveColorSet")
+                    ImmersiveModeChanged?.Invoke();
+                
                 break;
             }
         }
