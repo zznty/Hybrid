@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Silk.NET.Windowing;
+using NWindows;
+using NWindows.Threading;
 
 namespace Hybrid.Hosting;
 
@@ -17,31 +18,17 @@ public sealed class HybridHost : IHost
 
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
-        using var window = Window.Create(Services.GetRequiredService<HybridHostOptions>().WindowOptions);
+        var window = Window.Create(Services.GetRequiredService<HybridHostOptions>().WindowOptions ?? new());
 
-        using var context = new BufferedSynchronizationContext();
-        SynchronizationContext.SetSynchronizationContext(context);
-
-        (Services.GetRequiredService<IHostLifetime>() as HybridHostLifetime)?.SetWindow(window);
-
-        window.Initialize();
-        
-        // this is like that because on some platforms there is a requirement for windowing apis to be invoked from the first thread
-        // ReSharper disable AccessToDisposedClosure
-        window.Run(() =>
+        Dispatcher.Current.InvokeAsyncAndForget(() =>
         {
-            window.DoEvents();
-            context.Dispatch();
+            if (Services.GetRequiredService<IHostLifetime>() is not HybridHostLifetime hostLifetime) return;
             
-            if (!window.IsClosing)
-                window.DoUpdate();
-            if (window.IsClosing)
-                return;
-            window.DoRender();
+            hostLifetime.ConfigureWindow(window);
+            hostLifetime.WindowOnLoad();
         });
-        window.DoEvents();
-        context.Dispatch();
-        window.Reset();
+        
+        Dispatcher.Current.Run();
         
         return Task.CompletedTask;
     }

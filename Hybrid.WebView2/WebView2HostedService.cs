@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Dwm;
-using Windows.Win32.UI.Controls;
 using Windows.Win32.UI.WindowsAndMessaging;
 using Hybrid.Common;
 using Hybrid.Hosting;
@@ -12,7 +11,8 @@ using Hybrid.Hosting.Abstraction;
 using Hybrid.WebView2.Com;
 using Microsoft.Extensions.Options;
 using Microsoft.Win32;
-using Silk.NET.Windowing;
+using NWindows;
+using NWindows.Events;
 
 namespace Hybrid.WebView2;
 
@@ -26,11 +26,13 @@ public partial class WebView2HostedService(
     IEnumerable<IStartupScriptProvider> startupScriptProviders)
     : IHybridHostedService, 
         ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
-        ICoreWebView2CreateCoreWebView2ControllerCompletedHandler
+        ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
+        ICoreWebView2NavigationCompletedEventHandler
 {
-    private nint _hWnd;
-    private IWindow? _window;
+    private HWND _hWnd;
+    private Window? _window;
     private ICoreWebView2Controller? _controller;
+    private long _windowShowToken;
 
     private static event Action? ImmersiveModeChanged;
     
@@ -44,12 +46,9 @@ public partial class WebView2HostedService(
         return Task.CompletedTask;
     }
 
-    public Task StartAsync(IWindow window, CancellationToken cancellationToken)
+    public Task StartAsync(Window window, CancellationToken cancellationToken)
     {
-        if (window.Native?.Win32?.Hwnd is not { } hWnd)
-            throw new PlatformNotSupportedException("WebView2 is supported only for Win32 windowing");
-        
-        _hWnd = hWnd;
+        _hWnd = (HWND)window.Handle;
         _window = window;
 
         var hr = PInvoke.CreateCoreWebView2EnvironmentWithOptions(null, hostOptions.ContentRoot, null, this);
@@ -71,9 +70,8 @@ public partial class WebView2HostedService(
         Marshal.ThrowExceptionForHR(errorCode);
         
         _controller = createdController;
-
-        if (createdController is ICoreWebView2Controller2 controller2)
-            controller2.DefaultBackgroundColor = 0;
+        
+        ConfigureTransparency(createdController);
 
         var webView = createdController.CoreWebView2;
 
@@ -86,16 +84,36 @@ public partial class WebView2HostedService(
         
         options.Value.OnConfigureWebView(settings);
 
-        _window!.Move += _ => createdController.NotifyParentWindowPositionChanged();
-        _window.Resize += size =>
+        ImmersiveModeChanged += ConsiderImmersiveMode;
+
+        _window!.Events.Frame += (w, e) =>
         {
+            if (_controller is null) return;
+            
+            var moved = e.ChangeKind is FrameChangeKind.PositionAndSizeChanged or FrameChangeKind.Moved;
+            var resized = e.ChangeKind is FrameChangeKind.PositionAndSizeChanged or FrameChangeKind.Resized;
+
+            if (e.ChangeKind is FrameChangeKind.Restored or FrameChangeKind.Shown)
+            {
+                _controller.IsVisible = true;
+            }
+            else if (e.ChangeKind is FrameChangeKind.Minimized or FrameChangeKind.Hidden)
+                _controller.IsVisible = false;
+            
+            if (e.ChangeKind == FrameChangeKind.Shown) HookWindowProc();
+            
+            if (moved)
+                _controller.NotifyParentWindowPositionChanged();
+
+            if (!resized) return;
+            
             if (_controller is null) return;
             _controller.Bounds = new()
             {
                 Left = -1,
                 Top = -1,
-                Right = size.X,
-                Bottom = size.Y
+                Right = w.SizeInPixels.Width,
+                Bottom = w.SizeInPixels.Height
             };
         };
         
@@ -107,80 +125,32 @@ public partial class WebView2HostedService(
 
         createdController.Bounds = new()
         {
-            Left = 0,
-            Top = 0,
-            Right = _window.Size.X,
-            Bottom = _window.Size.Y
+            Left = -1,
+            Top = -1,
+            Right = _window!.SizeInPixels.Width,
+            Bottom = _window.SizeInPixels.Height
         };
         
         webView.Navigate(hostOptions.Url);
+        
+        webView.add_NavigationCompleted(this, ref _windowShowToken);
     }
 
-    private unsafe void ConsiderNonClientAreaSupport(ICoreWebView2Settings settings)
+    private unsafe void HookWindowProc()
     {
-        if (settings is not ICoreWebView2Settings9 settings9 || !options.Value.UseCssTitleBar)
-        {
-            options.Value.UseCssTitleBar = false;
-            return;
-        }
-        
-        settings9.IsNonClientRegionSupportEnabled = true;
-
-        var hWnd = (HWND)_hWnd;
-
-        var captionColor = 0xFFFFFFFE;
-        PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_CAPTION_COLOR, &captionColor, sizeof(int)).ThrowOnFailure();
-
-        PInvoke.DwmExtendFrameIntoClientArea(hWnd, new MARGINS
-        {
-            cxLeftWidth = -1,
-            cxRightWidth = -1,
-            cyTopHeight = -1,
-            cyBottomHeight = -1
-        }).ThrowOnFailure();
-
-        var style = PInvoke.GetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
-
-        style &= ~(int)WINDOW_STYLE.WS_SYSMENU;
-
-        PInvoke.SetWindowLong(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, style);
-
-        _origProc = PInvoke.GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC);
+        _origProc = PInvoke.GetWindowLongPtr(_hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC);
 
         var ptr = (nint)(delegate* unmanaged[Stdcall]<HWND, uint, WPARAM, LPARAM, LRESULT>)&WindowProc;
 
-        PInvoke.SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_WNDPROC, ptr);
-
-        if (!PInvoke.SetWindowPos(hWnd, HWND.Null, 0, 0, _window!.Size.X, _window.Size.Y,
+        PInvoke.SetWindowLongPtr(_hWnd, WINDOW_LONG_PTR_INDEX.GWL_WNDPROC, ptr);
+        
+        // hack around webview eating window border region in it's wndproc
+        // so we trigger recalculate of non-client area
+        if (!PInvoke.SetWindowPos(_hWnd, HWND.Null, 0, 0, _window!.SizeInPixels.Width, _window.SizeInPixels.Height,
                 SET_WINDOW_POS_FLAGS.SWP_NOMOVE | SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED))
             Marshal.ThrowExceptionForHR(Marshal.GetLastWin32Error());
-
-        if (!OperatingSystem.IsWindowsVersionAtLeast(10, build: 22000) || !options.Value.UseTransparency)
-        {
-            options.Value.UseTransparency = false;
-            return;
-        }
-
-        var cornerPreference = DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_ROUND;
-        PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPreference,
-            sizeof(int)).ThrowOnFailure();
-
-        var value = 1;
-        PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_HOSTBACKDROPBRUSH, &value,
-            sizeof(int)).ThrowOnFailure();
-        
-        ConsiderImmersiveMode();
-
-        ImmersiveModeChanged += ConsiderImmersiveMode;
-
-        if (OperatingSystem.IsWindowsVersionAtLeast(10, build: 22621))
-        {
-            var backdropType = DWM_SYSTEMBACKDROP_TYPE.DWMSBT_MAINWINDOW;
-            PInvoke.DwmSetWindowAttribute(hWnd, DWMWINDOWATTRIBUTE.DWMWA_SYSTEMBACKDROP_TYPE, &backdropType,
-                sizeof(DWM_SYSTEMBACKDROP_TYPE)).ThrowOnFailure();
-        }
     }
-
+    
     private unsafe void ConsiderImmersiveMode()
     {
         var value = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
@@ -188,10 +158,60 @@ public partial class WebView2HostedService(
         
         value = value == 0 ? 1 : 0;
         
-        PInvoke.DwmSetWindowAttribute((HWND)_hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE, &value,
+        PInvoke.DwmSetWindowAttribute(_hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE, &value,
             sizeof(int)).ThrowOnFailure();
     }
 
+    public void Invoke(ICoreWebView2 sender, ICoreWebView2NavigationCompletedEventArgs args)
+    {
+        _controller!.CoreWebView2.remove_NavigationCompleted(_windowShowToken);
+
+        _window!.Visible = true;
+        _window.Activate();
+    }
+
+    private void ConsiderNonClientAreaSupport(ICoreWebView2Settings settings)
+    {
+        if (settings is not ICoreWebView2Settings9 settings9 || !options.Value.UseCssTitleBar)
+        {
+            _window!.Decorations = true;
+            options.Value.UseCssTitleBar = false;
+            return;
+        }
+        
+        settings9.IsNonClientRegionSupportEnabled = true;
+    }
+
+    private unsafe void ConfigureTransparency(ICoreWebView2Controller controller)
+    {
+        var captionColor = 0xFFFFFFFE;
+        PInvoke.DwmSetWindowAttribute(_hWnd, DWMWINDOWATTRIBUTE.DWMWA_CAPTION_COLOR, &captionColor, sizeof(int))
+            .ThrowOnFailure();
+
+        if (!OperatingSystem.IsWindowsVersionAtLeast(10, build: 22000) ||
+            controller is not ICoreWebView2Controller2 controller2)
+        {
+            return;
+        }
+
+        controller2.DefaultBackgroundColor = 0;
+        
+        /*var cornerPreference = DWM_WINDOW_CORNER_PREFERENCE.DWMWCP_ROUND;
+        PInvoke.DwmSetWindowAttribute(_hWnd, DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPreference,
+            sizeof(DWM_WINDOW_CORNER_PREFERENCE)).ThrowOnFailure();
+
+        var value = 1;
+        PInvoke.DwmSetWindowAttribute(_hWnd, DWMWINDOWATTRIBUTE.DWMWA_USE_HOSTBACKDROPBRUSH, &value,
+            sizeof(int)).ThrowOnFailure();*/
+
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, build: 22621))
+        {
+            var backdropType = DWM_SYSTEMBACKDROP_TYPE.DWMSBT_MAINWINDOW;
+            PInvoke.DwmSetWindowAttribute(_hWnd, DWMWINDOWATTRIBUTE.DWMWA_SYSTEMBACKDROP_TYPE, &backdropType,
+                sizeof(DWM_SYSTEMBACKDROP_TYPE)).ThrowOnFailure();
+        }
+    }
+    
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
     private static unsafe LRESULT WindowProc(HWND hWnd, uint uMsg, WPARAM wParam, LPARAM lParam)
     {

@@ -43,8 +43,4 @@
         <ProjectReference Include="..\Hybrid.WebView2\Hybrid.WebView2.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.22.0" />
-    </ItemGroup>
-
 </Project>

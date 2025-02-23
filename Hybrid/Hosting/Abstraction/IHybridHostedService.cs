@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.Hosting;
-using Silk.NET.Windowing;
+using NWindows;
 
 namespace Hybrid.Hosting.Abstraction;
 
 public interface IHybridHostedService : IHostedService
 {
-    Task StartAsync(IWindow window, CancellationToken cancellationToken);
+    Task StartAsync(Window window, CancellationToken cancellationToken);
     Task IHostedService.StartAsync(CancellationToken cancellationToken)
     {
         throw new NotSupportedException();

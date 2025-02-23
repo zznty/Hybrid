@@ -86,7 +86,7 @@ public partial class ComGenerator
                                 {{member.Member switch {
                                     IMethodSymbol methodSymbol => string.Join(Environment.NewLine, methodSymbol.Parameters
                                         .Zip(member.Parameters, (symbol, second) => (symbol, info: second)).Select(b =>
-                                            $"var __arg{b.symbol.Name} = {EmitUnmanagedToManagedMarshal(b.symbol.RefKind == RefKind.None ? $"__{b.symbol.Name}__unmanaged" : $"*__{b.symbol.Name}__unmanaged", b.info)};")),
+                                            $"{EmitRefKindExpand(b.symbol.RefKind)}var __arg{b.symbol.Name} = {EmitRefKindExpand(b.symbol.RefKind)}{EmitUnmanagedToManagedMarshal(b.symbol.RefKind == RefKind.None ? $"__{b.symbol.Name}__unmanaged" : $"*__{b.symbol.Name}__unmanaged", b.info)};")),
                                     IPropertySymbol when member.MemberType is not InterfaceMemberType.PropertyGet =>
                                         $"var __value = {EmitUnmanagedToManagedMarshal(member.MemberType == InterfaceMemberType.PropertyPutRef ? "*__value__unmanaged" : "__value__unmanaged", member.ReturnInformation!)};",
                                     _ => string.Empty

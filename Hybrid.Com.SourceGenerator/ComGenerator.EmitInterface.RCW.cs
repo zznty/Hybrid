@@ -30,8 +30,9 @@ public partial class ComGenerator
                                          _ => throw new NotSupportedException($"Symbol of type {member.Member.GetType()} is not supported.")
                                      }}} {{definition.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}}.{{member.Name}}{{(
                                      member.MemberType == InterfaceMemberType.Method ?
-                                         $"({string.Join(", ", member.Parameters.Select(b =>
-                                             $"{b.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {b.Name}"))})" :
+                                         $"({string.Join(", ", ((IMethodSymbol)member.Member).Parameters.Zip(member.Parameters, (symbol, second) => (symbol, info: second))
+                                             .Select(b =>
+                                             $"{EmitRefKindExpand(b.symbol.RefKind)}{b.info.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {b.info.Name}"))})" :
                                          string.Empty
                                  )}}
                                      {
@@ -64,11 +65,19 @@ public partial class ComGenerator
     private static string EmitDynamicCastableMemberBody(InterfaceDefinition definition, InterfaceMember member,
         int vtableIndex)
     {
-        var parameters =
+        var parametersInfos =
             member.MemberType is InterfaceMemberType.PropertyPut or InterfaceMemberType.PropertyPutRef &&
             member.ReturnInformation is not null
                 ? member.Parameters.Add(member.ReturnInformation)
                 : member.Parameters;
+
+        var parameters = (member.Member is IMethodSymbol methodSymbol
+            ? methodSymbol.Parameters
+                .Zip<IParameterSymbol, EmitInformation, (IParameterSymbol? symbol, EmitInformation info)>(
+                    member.Parameters, (symbol, info) => (symbol, info))
+            : parametersInfos.Select<EmitInformation, (IParameterSymbol? symbol, EmitInformation info)>(info =>
+                (null, info))).ToArray();
+        
         var returnInformation =
             member.MemberType is InterfaceMemberType.PropertyPut or InterfaceMemberType.PropertyPutRef &&
             !member.IsPreserveSig
@@ -82,20 +91,20 @@ public partial class ComGenerator
                  {{(returnInformation is null ? string.Empty : $"{MarshalType(returnInformation, RefKind.None)} __retVal_native = default;")}}
                  {{(member.IsPreserveSig ? string.Empty : "int __invokeRetVal = default;")}}
                  {{string.Join(Environment.NewLine, parameters.Select(b =>
-                     $"{MarshalType(b, RefKind.None)} __{b.Name}_native = default;"))}}
+                     $"{MarshalType(b.info, b.symbol?.RefKind ?? RefKind.None)} __{b.info.Name}_native = default;"))}}
                  try
                  {
                     {{string.Join(Environment.NewLine, parameters.Select(b =>
-                        $"__{b.Name}_native = {EmitManagedToUnmanagedMarshal(b.Name, b)};"))}}
+                        $"__{b.info.Name}_native = {EmitManagedToUnmanagedMarshal(b.info.Name, b.info, b.symbol?.RefKind ?? RefKind.None)};"))}}
                     {
                         {{(member.IsPreserveSig ? returnInformation is null ? string.Empty : "__retVal_native = " : "__invokeRetVal = ")}}((delegate* unmanaged[MemberFunction]<void*{{(parameters.Any() ? ", " : string.Empty)}}{{string.Join(", ", parameters.Select(b =>
-                            MarshalType(b, RefKind.None)))}}, {{(member.IsPreserveSig ?
+                            MarshalType(b.info, b.symbol?.RefKind ?? RefKind.None)))}}, {{(member.IsPreserveSig ?
                             returnInformation is null ?
                                 "void" :
                                 MarshalType(returnInformation, RefKind.None) :
                             returnInformation is null ?
                                 "int" :
-                                $"{MarshalType(returnInformation, RefKind.Out)}, int")}}> )__vtable_native[{{vtableIndex}}])(__this{{(parameters.Any() || (!member.IsPreserveSig && returnInformation is not null) ? ", " : string.Empty)}}{{string.Join(", ", parameters.Select(b => $"__{b.Name}_native").Concat(member.IsPreserveSig || returnInformation is null ? [] : ["&__retVal_native"]))}});
+                                $"{MarshalType(returnInformation, RefKind.Out)}, int")}}> )__vtable_native[{{vtableIndex}}])(__this{{(parameters.Any() || (!member.IsPreserveSig && returnInformation is not null) ? ", " : string.Empty)}}{{string.Join(", ", parameters.Select(b => $"__{b.info.Name}_native").Concat(member.IsPreserveSig || returnInformation is null ? [] : ["&__retVal_native"]))}});
                     }
                     
                     {{(member.IsPreserveSig ? string.Empty : "global::System.Runtime.InteropServices.Marshal.ThrowExceptionForHR(__invokeRetVal);")}}
@@ -108,7 +117,7 @@ public partial class ComGenerator
                     if (__invokeSucceeded)
                     {
                         {{(returnInformation is null ? string.Empty : EmitManagedToUnmanagedFinalize("__retVal_native", returnInformation) + ";")}}
-                        {{string.Join(Environment.NewLine, parameters.Select(b => EmitManagedToUnmanagedFinalize($"__{b.Name}_native", b) + ";"))}}
+                        {{string.Join(Environment.NewLine, parameters.Select(b => EmitManagedToUnmanagedFinalize($"__{b.info.Name}_native", b.info) + ";"))}}
                     }
                  }
 

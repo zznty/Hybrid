@@ -1,16 +1,15 @@
 using System.Diagnostics;
-using Silk.NET.Windowing;
+using NWindows;
 
 namespace Hybrid.Hosting;
 
-public sealed record HybridHostOptions(string ApplicationName, string EnvironmentName, string ContentRoot, string Url, WindowOptions WindowOptions)
+public sealed class HybridHostOptions
 {
-    public static HybridHostOptions Default => new("Hybrid Application",
-        Debugger.IsAttached ? "Development" : "Production",
-        AppContext.BaseDirectory,
-        "http://localhost:5173",
-        WindowOptions.Default with
-        {
-            API = GraphicsAPI.None
-        });
+    public string ApplicationName { get; init; } = "Hybrid Application";
+    public string EnvironmentName { get; init; } = Debugger.IsAttached ? "Development" : "Production";
+    public string ContentRoot { get; init; } = AppContext.BaseDirectory;
+    public string Url { get; init; } = "http://localhost:5173";
+    public WindowCreateOptions? WindowOptions { get; init; }
+    
+    internal static HybridHostOptions Default => new();
 }

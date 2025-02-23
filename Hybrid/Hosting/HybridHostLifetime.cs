@@ -1,30 +1,30 @@
 ﻿using Hybrid.Hosting.Abstraction;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Silk.NET.Windowing;
+using NWindows;
+using NWindows.Events;
 
 namespace Hybrid.Hosting;
 
 internal class HybridHostLifetime(IEnumerable<IHostedService> hostedServices, ILogger<HybridHostLifetime> logger) : IHostLifetime, IHybridApplicationLifetime
 {
-    private IWindow? _window;
+    private Window? _window;
     private readonly SemaphoreSlim _startSemaphore = new(0);
     private readonly SemaphoreSlim _stopSemaphore = new(0);
     private readonly CancellationTokenSource _stoppingTokenSource = new();
     private readonly CancellationTokenSource _startedTokenSource = new();
     
-    internal void SetWindow(IWindow window)
+    internal void ConfigureWindow(Window window)
     {
         _stoppingTokenSource.TryReset();
         _startedTokenSource.TryReset();
         
         _window = window;
         
-        _window.Load += WindowOnLoad;
-        _window.Closing += WindowOnClosing;
+        _window.Events.Close += WindowOnClosing;
     }
 
-    private async void WindowOnLoad()
+    internal async void WindowOnLoad()
     {
         try
         {
@@ -33,7 +33,7 @@ internal class HybridHostLifetime(IEnumerable<IHostedService> hostedServices, IL
         catch (Exception e)
         {
             logger.LogCritical(e, "Host initialization failed.");
-            await StopAsync(default);
+            await StopAsync(CancellationToken.None);
             throw;
         }
         
@@ -58,7 +58,7 @@ internal class HybridHostLifetime(IEnumerable<IHostedService> hostedServices, IL
         }
     }
     
-    private void WindowOnClosing()
+    private void WindowOnClosing(Window window, CloseEvent evt)
     {
         _stoppingTokenSource.Cancel();
         _stopSemaphore.Release();
@@ -86,6 +86,6 @@ internal class HybridHostLifetime(IEnumerable<IHostedService> hostedServices, IL
     public void MinimizeApplication()
     {
         if (_window is not null) 
-            _window.WindowState = WindowState.Minimized;
+            _window.State = WindowState.Minimized;
     }
 }

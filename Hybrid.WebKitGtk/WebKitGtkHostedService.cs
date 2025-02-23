@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using Hybrid.WebCore;
 using Hybrid.WebKitGtk.Interop;
-using Silk.NET.Windowing;
+using NWindows;
 
 namespace Hybrid.WebKitGtk;
 
@@ -16,16 +16,13 @@ public class WebKitGtkHostedService : WebCoreHostedService
         return Task.CompletedTask;
     }
 
-    public override unsafe Task StartAsync(IWindow window, CancellationToken cancellationToken)
+    public override unsafe Task StartAsync(Window window, CancellationToken cancellationToken)
     {
-        if (window.Native?.X11?.Window is not { } xWindow)
-            throw new InvalidOperationException("Window is not an X11 window."); 
-        
         Gtk.Init(0, null);
 
         var gDisplay = Gtk.GetDefaultDisplay();
 
-        var gdkWindow = Gtk.NewForeignWindowForDisplay(gDisplay, xWindow);
+        var gdkWindow = Gtk.NewForeignWindowForDisplay(gDisplay, (nuint)window.Handle);
 
         var gtkWidget = Gtk.NewWidget(Gtk.GetWindowWidgetType(), null);
         

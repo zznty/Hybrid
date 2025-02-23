@@ -89,14 +89,14 @@ public partial class ComGenerator
         };
     }
 
-    private static string EmitManagedToUnmanagedMarshal(string managedName, EmitInformation information)
+    private static string EmitManagedToUnmanagedMarshal(string managedName, EmitInformation information, RefKind refKind = RefKind.None)
     {
         if (information.UnmanagedTypeOverride == null)
         {
             if (information.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "bool")
                 return $"({managedName} ? -1 : 0)";
             if (information.Type.IsUnmanagedType)
-                return managedName;
+                return refKind == RefKind.None ? managedName : $"({information.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}*)global::System.Runtime.CompilerServices.Unsafe.AsPointer(ref {managedName})";
             if (information.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == "string")
                 return
                     $"global::System.Runtime.InteropServices.Marshalling.BStrStringMarshaller.ConvertToUnmanaged({managedName})";

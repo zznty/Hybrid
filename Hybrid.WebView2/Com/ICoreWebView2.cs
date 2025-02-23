@@ -23,8 +23,8 @@ public partial interface ICoreWebView2
     void remove_SourceChanged();
     void add_HistoryChanged();
     void remove_HistoryChanged();
-    void add_NavigationCompleted();
-    void remove_NavigationCompleted();
+    void add_NavigationCompleted(ICoreWebView2NavigationCompletedEventHandler handler, ref long token);
+    void remove_NavigationCompleted(long token);
     void add_FrameNavigationStarting();
     void remove_FrameNavigationStarting();
     void add_FrameNavigationCompleted();

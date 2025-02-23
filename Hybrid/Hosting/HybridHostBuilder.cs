@@ -1,27 +1,48 @@
-﻿using Hybrid.Hosting.Abstraction;
+﻿using System.Drawing;
+using Hybrid.Hosting.Abstraction;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using NWindows;
 
 namespace Hybrid.Hosting;
 
-public sealed class HybridHostBuilder : IHostBuilder
+public sealed class HybridHostBuilder : IHybridHostBuilder
 {
     private readonly ConfigurationManager _hostConfiguration = new();
     private readonly IConfigurationBuilder _appConfigurationBuilder = new ConfigurationBuilder();
     private readonly HostBuilderContext _hostBuilderContext;
     private readonly IServiceCollection _services = new ServiceCollection();
 
-    public HybridHostBuilder(HybridHostOptions? hostOptions = null)
+    private readonly HybridHostOptionsBuilder _optionsBuilder = new();
+    private readonly WindowCreateOptionsBuilder _windowOptionsBuilder = new();
+
+    public HybridHostBuilder()
     {
-        _services.AddSingleton(hostOptions ?? HybridHostOptions.Default);
         _services.AddLogging();
         
         _hostBuilderContext = new HostBuilderContext(Properties)
         {
             Configuration = _hostConfiguration
         };
+
+        _windowOptionsBuilder
+            .WithResizable(true)
+            .WithMinimizable(true)
+            .WithShowInTaskBar(true)
+            .WithDefaultSizeFactor(new PointF(.6f, .6f))
+            .WithEnableComposition(true)
+            .WithManualDpi(Dpi.Default)
+            .WithEvents(new WindowEventHub());
+        
+        var defaultOptions = HybridHostOptions.Default;
+        
+        _optionsBuilder.WithWindowOptions(_windowOptionsBuilder.Build)
+            .WithApplicationName(defaultOptions.ApplicationName)
+            .WithEnvironmentName(defaultOptions.EnvironmentName)
+            .WithContentRoot(defaultOptions.ContentRoot)
+            .WithUrl(defaultOptions.Url);
     }
 
     public IHostBuilder ConfigureHostConfiguration(Action<IConfigurationBuilder> configureDelegate)
@@ -62,6 +83,7 @@ public sealed class HybridHostBuilder : IHostBuilder
 
     public IHost Build()
     {
+        _services.TryAddSingleton(_optionsBuilder.Build());
         _services.TryAddSingleton(_appConfigurationBuilder.Build());
         _services.TryAddSingleton<HybridHostLifetime>();
         _services.TryAddSingleton<IHostLifetime>(s => s.GetRequiredService<HybridHostLifetime>());
@@ -73,4 +95,17 @@ public sealed class HybridHostBuilder : IHostBuilder
     }
 
     public IDictionary<object, object> Properties { get; } = new Dictionary<object, object>();
+    public IHybridHostBuilder ConfigureHybridHostOptions(Action<HybridHostOptionsBuilder> configureDelegate)
+    {
+        configureDelegate(_optionsBuilder);
+        
+        return this;
+    }
+
+    public IHybridHostBuilder ConfigureWindowOptions(Action<WindowCreateOptionsBuilder> configureDelegate)
+    {
+        configureDelegate(_windowOptionsBuilder);
+        
+        return this;
+    }
 }
